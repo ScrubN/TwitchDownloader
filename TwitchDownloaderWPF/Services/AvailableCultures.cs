@@ -8,11 +8,15 @@
         public enum Culture
         {
             English,
+            Turkish,
             French
         }
 
         private const string ENGLISH_NAME = "en";
         private const string ENGLISH_NATIVE_NAME = "English";
+
+        private const string TURKISH_NAME = "tr-TR";
+        private const string TURKISH_NATIVE_NAME = "Türkçe";
 
         private const string FRENCH_NAME = "fr-FR";
         private const string FRENCH_NATIVE_NAME = "Français";
@@ -25,6 +29,7 @@
             return translation switch
             {
                 Culture.English => ENGLISH_NAME,
+                Culture.Turkish => TURKISH_NAME,
                 Culture.French => FRENCH_NAME,
                 _ => INVARIANT_NAME
             };
@@ -35,6 +40,7 @@
             return translation switch
             {
                 Culture.English => ENGLISH_NATIVE_NAME,
+                Culture.Turkish => TURKISH_NATIVE_NAME,
                 Culture.French => FRENCH_NATIVE_NAME,
                 _ => INVARIANT_NATIVE_NAME
             };
