@@ -1,7 +1,6 @@
 ﻿using SkiaSharp;
 using System;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using TwitchDownloaderCLI.Modes.Arguments;
 using TwitchDownloaderCLI.Tools;
@@ -20,9 +19,9 @@ namespace TwitchDownloaderCLI.Modes
             progress.ProgressChanged += ProgressHandler.Progress_ProgressChanged;
 
             ChatRenderOptions renderOptions = GetRenderOptions(inputOptions);
-            ChatRenderer chatRenderer = new(renderOptions);
+            ChatRenderer chatRenderer = new(renderOptions, progress);
             chatRenderer.ParseJsonAsync().Wait();
-            chatRenderer.RenderVideoAsync(progress, new CancellationToken()).Wait();
+            chatRenderer.RenderVideoAsync(new CancellationToken()).Wait();
         }
 
         private static ChatRenderOptions GetRenderOptions(ChatRenderArgs inputOptions)
@@ -35,9 +34,12 @@ namespace TwitchDownloaderCLI.Modes
                 MessageColor = SKColor.Parse(inputOptions.MessageColor),
                 ChatHeight = inputOptions.ChatHeight,
                 ChatWidth = inputOptions.ChatWidth,
+                StartOverride = inputOptions.CropBeginningTime,
+                EndOverride = inputOptions.CropEndingTime,
                 BttvEmotes = (bool)inputOptions.BttvEmotes,
                 FfzEmotes = (bool)inputOptions.FfzEmotes,
                 StvEmotes = (bool)inputOptions.StvEmotes,
+                AllowUnlistedEmotes = (bool)inputOptions.AllowUnlistedEmotes,
                 Outline = inputOptions.Outline,
                 OutlineSize = inputOptions.OutlineSize,
                 Font = inputOptions.Font,
@@ -69,16 +71,18 @@ namespace TwitchDownloaderCLI.Modes
                 Timestamp = inputOptions.Timestamp,
                 Offline = inputOptions.Offline,
                 LogFfmpegOutput = inputOptions.LogFfmpegOutput,
+                SkipDriveWaiting = inputOptions.SkipDriveWaiting,
                 EmoteScale = inputOptions.ScaleEmote,
                 BadgeScale = inputOptions.ScaleBadge,
                 EmojiScale = inputOptions.ScaleEmoji,
                 VerticalSpacingScale = inputOptions.ScaleVertical,
-                LeftSpacingScale = inputOptions.ScaleLeft,
+                SidePaddingScale = inputOptions.ScaleLeft,
                 SectionHeightScale = inputOptions.ScaleSectionHeight,
                 WordSpacingScale = inputOptions.ScaleWordSpace,
                 EmoteSpacingScale = inputOptions.ScaleEmoteSpace,
                 AccentIndentScale = inputOptions.ScaleAccentIndent,
                 AccentStrokeScale = inputOptions.ScaleAccentStroke,
+                DisperseCommentOffsets = (bool)inputOptions.DisperseCommentOffsets
             };
 
             if (renderOptions.GenerateMask && renderOptions.BackgroundColor.Alpha == 255)
@@ -107,7 +111,7 @@ namespace TwitchDownloaderCLI.Modes
 
             if (inputOptions.BannedWordsString != "")
             {
-                renderOptions.BannedWordsArray = inputOptions.BannedWordsString.ToLower().Split(',',
+                renderOptions.BannedWordsArray = inputOptions.BannedWordsString.Split(',',
                     StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
             }
 

@@ -25,7 +25,7 @@ namespace TwitchDownloaderWPF.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        [global::System.Configuration.DefaultSettingValueAttribute("4")]
         public int VodDownloadThreads {
             get {
                 return ((int)(this["VodDownloadThreads"]));
@@ -733,7 +733,19 @@ namespace TwitchDownloaderWPF.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("en")]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool DisperseCommentOffsets {
+            get {
+                return ((bool)(this["DisperseCommentOffsets"]));
+            }
+            set {
+                this["DisperseCommentOffsets"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("en-US")]
         public string GuiCulture {
             get {
                 return ((string)(this["GuiCulture"]));

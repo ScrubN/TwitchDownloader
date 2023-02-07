@@ -13,7 +13,7 @@
       lex:ResxLocalizationProvider.DefaultAssembly="TwitchDownloaderWPF"
       lex:ResxLocalizationProvider.DefaultDictionary="Strings"
       mc:Ignorable="d" 
-      d:DesignHeight="370" d:DesignWidth="800"
+      d:DesignHeight="400" d:DesignWidth="800"
       Title="PageChatRender" Initialized="Page_Initialized" Unloaded="Page_Unloaded" Loaded="Page_Loaded"
       >
 
@@ -66,8 +66,8 @@
                         <TextBlock Text="{lex:Loc Timestamps}" HorizontalAlignment="Right" Margin="0,6,0,0" Foreground="{DynamicResource AppText}"/>
                         <TextBlock Text="{lex:Loc SubMessages}" HorizontalAlignment="Right" Margin="0,6,0,0" Foreground="{DynamicResource AppText}"/>
                         <TextBlock Text="{lex:Loc ChatBadges}" HorizontalAlignment="Right" Margin="0,6,0,0" Foreground="{DynamicResource AppText}"/>
-                        <TextBlock Text="{lex:Loc UpdateTime}" HorizontalAlignment="Right" Margin="0,14,0,0" Foreground="{DynamicResource AppText}"/>
-                        
+                        <TextBlock Text="{lex:Loc UpdateRate}" HorizontalAlignment="Right" Margin="0,14,0,0" Foreground="{DynamicResource AppText}"/>
+                        <TextBlock HorizontalAlignment="Right" Margin="0,14,0,0" Foreground="{DynamicResource AppText}"><Run Text="{lex:Loc MessageDispersion}"/><Hyperlink ToolTipService.ShowDuration="30000" Foreground="{DynamicResource AppHyperlink}"><Hyperlink.ToolTip><Run Text="{lex:Loc MessageDispersionTooltip}"/></Hyperlink.ToolTip>(?)</Hyperlink>:</TextBlock>
                     </StackPanel>
                     <StackPanel Orientation="Vertical" Margin="0,10,0,5">
                         <CheckBox x:Name="checkOutline" HorizontalAlignment="Left" Margin="0,2,0,0" BorderBrush="{DynamicResource AppElementBorder}"/>
@@ -75,13 +75,13 @@
                         <CheckBox x:Name="checkSub" HorizontalAlignment="Left" Margin="0,6,0,0" BorderBrush="{DynamicResource AppElementBorder}"/>
                         <CheckBox x:Name="checkBadge" HorizontalAlignment="Left" Margin="0,6,0,0" BorderBrush="{DynamicResource AppElementBorder}"/>
                         <TextBox x:Name="textUpdateTime" Text="1.0" Width="50" HorizontalAlignment="Left" Margin="0,7,0,0" Background="{DynamicResource AppElementBackground}" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}"/>
+                        <CheckBox x:Name="checkDispersion" HorizontalAlignment="Left" Margin="0,6,0,0" BorderBrush="{DynamicResource AppElementBorder}"/>
                     </StackPanel>
                     <StackPanel Orientation="Vertical" Margin="15,10,5,2">
                         <TextBlock Text="{lex:Loc BttvEmotes}" HorizontalAlignment="Right" Margin="0,0,0,0" Foreground="{DynamicResource AppText}"/>
                         <TextBlock Text="{lex:Loc FfzEmotes}" HorizontalAlignment="Right" Margin="0,6,0,0" Foreground="{DynamicResource AppText}"/>
                         <TextBlock Text="{lex:Loc StvEmotes}" HorizontalAlignment="Right" Margin="0,6,0,0" Foreground="{DynamicResource AppText}"/>
                         <TextBlock HorizontalAlignment="Right" Margin="0,6,0,0" Foreground="{DynamicResource AppText}"><Run Text="{lex:Loc Offline}"/><Hyperlink ToolTipService.ShowDuration="30000" Foreground="{DynamicResource AppHyperlink}"><Hyperlink.ToolTip><Run Text="{lex:Loc OfflineTooltip}"/></Hyperlink.ToolTip>(?)</Hyperlink>:</TextBlock>
-                        
                     </StackPanel>
                     <StackPanel Orientation="Vertical" Margin="0,10,0,2">
                         <CheckBox x:Name="checkBTTV" HorizontalAlignment="Left" Margin="0,2,0,0" BorderBrush="{DynamicResource AppElementBorder}"/>
@@ -106,7 +106,7 @@
                         <TextBlock Text="{lex:Loc BadgeScale}" HorizontalAlignment="Right" Margin="0,15,0,0" Foreground="{DynamicResource AppText}"/>
                         <TextBlock Text="{lex:Loc EmojiScale}" HorizontalAlignment="Right" Margin="0,15,0,0" Foreground="{DynamicResource AppText}"/>
                         <TextBlock Text="{lex:Loc VerticalSpacingScale}" HorizontalAlignment="Right" Margin="0,15,0,0" Foreground="{DynamicResource AppText}"/>
-                        <TextBlock Text="{lex:Loc LeftSpacingScale}" HorizontalAlignment="Right" Margin="0,15,0,0" Foreground="{DynamicResource AppText}"/>
+                        <TextBlock Text="{lex:Loc SidePaddingScale}" HorizontalAlignment="Right" Margin="0,15,0,0" Foreground="{DynamicResource AppText}"/>
                         <TextBlock Text="{lex:Loc SectionHeightScale}" HorizontalAlignment="Right" Margin="0,15,0,0" Foreground="{DynamicResource AppText}"/>
                     </StackPanel>
                     <StackPanel Orientation="Vertical" Margin="0,10,5,5">
@@ -114,14 +114,14 @@
                         <TextBox x:Name="textBadgeScale" Text="1.0" Width="50" HorizontalAlignment="Left" Margin="0,1,0,0" Background="{DynamicResource AppElementBackground}" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}"/>
                         <TextBox x:Name="textEmojiScale" Text="1.0" Width="50" HorizontalAlignment="Left" Margin="0,1,0,0" Background="{DynamicResource AppElementBackground}" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}"/>
                         <TextBox x:Name="textVerticalScale" Text="1.0" Width="50" HorizontalAlignment="Left" Margin="0,1,0,0" Background="{DynamicResource AppElementBackground}" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}"/>
-                        <TextBox x:Name="textLeftScale" Text="1.0" Width="50" HorizontalAlignment="Left" Margin="0,1,0,0" Background="{DynamicResource AppElementBackground}" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}"/>
+                        <TextBox x:Name="textSidePaddingScale" Text="1.0" Width="50" HorizontalAlignment="Left" Margin="0,1,0,0" Background="{DynamicResource AppElementBackground}" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}"/>
                         <TextBox x:Name="textSectionHeightScale" Text="1.0" Width="50" HorizontalAlignment="Left" Margin="0,1,0,0" Background="{DynamicResource AppElementBackground}" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}"/>
                     </StackPanel>
                     <StackPanel Orientation="Vertical" Margin="5,10,5,5">
                         <TextBlock Text="{lex:Loc WordSpacingScale}" HorizontalAlignment="Right" Margin="0,6,0,0" Foreground="{DynamicResource AppText}"/>
                         <TextBlock Text="{lex:Loc EmoteSpacingScale}" HorizontalAlignment="Right" Margin="0,15,0,0" Foreground="{DynamicResource AppText}"/>
-                        <TextBlock Text="{lex:Loc AccentStrokeScale}" HorizontalAlignment="Right" Margin="0,15,0,0" Foreground="{DynamicResource AppText}"/>
-                        <TextBlock Text="{lex:Loc AccentIndentScale}" HorizontalAlignment="Right" Margin="0,15,0,0" Foreground="{DynamicResource AppText}"/>
+                        <TextBlock Text="{lex:Loc HighlightStrokeScale}" HorizontalAlignment="Right" Margin="0,15,0,0" Foreground="{DynamicResource AppText}"/>
+                        <TextBlock Text="{lex:Loc HighlightIndentScale}" HorizontalAlignment="Right" Margin="0,15,0,0" Foreground="{DynamicResource AppText}"/>
                     </StackPanel>
                     <StackPanel Orientation="Vertical" Margin="0,10,5,5">
                         <TextBox x:Name="textWordSpaceScale" Text="1.0" Width="50" HorizontalAlignment="Left" Margin="0,0,0,0" Background="{DynamicResource AppElementBackground}" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}"/>
@@ -181,8 +181,8 @@
             <hc:SplitButton x:Name="btnRender" Height="40" Width="120" Margin="0,6,0,0" Content="{lex:Loc Render}" Click="SplitButton_Click" Background="{DynamicResource ActionButtonBackground}" Foreground="{DynamicResource ActionButtonText}" BorderBrush="{DynamicResource ActionButtonBorder}" >
                 <hc:SplitButton.DropDownContent>
                     <StackPanel>
-                        <MenuItem Header="{lex:Loc PartialRender}" Click="MenuItem_Click_1"/>
-                        <MenuItem Header="{lex:Loc EnqueueRender}" Click="MenuItem_Click"/>
+                        <MenuItem Header="{lex:Loc PartialRender}" Click="menuItemPartialRender_Click"/>
+                        <MenuItem Header="{lex:Loc EnqueueRender}" Click="menuItemEnqueue_Click"/>
                     </StackPanel>
                 </hc:SplitButton.DropDownContent>
             </hc:SplitButton>
@@ -207,13 +207,13 @@
 
         <!--STATUS BAR-->
         <StatusBar Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="6" Background="{DynamicResource StatusBarBackground}" BorderBrush="{DynamicResource StatusBarBorder}">
-            <StatusBarItem>
+            <StatusBarItem Padding="10,0,10,0">
                 <Image x:Name="statusImage" gif:ImageBehavior.AnimatedSource="Images/ppHop.gif"/>
             </StatusBarItem>
-            <StatusBarItem>
+            <StatusBarItem Padding="10,0,10,0">
                 <TextBlock Text="{lex:Loc StatusIdle}" x:Name="statusMessage" FontWeight="Bold" Foreground="{DynamicResource StatusBarText}"/>
             </StatusBarItem>
-            <StatusBarItem HorizontalAlignment="Right">
+            <StatusBarItem Padding="10,0,10,0" HorizontalAlignment="Right">
                 <ProgressBar Width="200" Height="14" x:Name="statusProgressBar" Background="{DynamicResource StatusBarElement}" Foreground="{DynamicResource ProgressBarForeground}"/>
             </StatusBarItem>
         </StatusBar>

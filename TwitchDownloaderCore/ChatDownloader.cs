@@ -5,8 +5,10 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using TwitchDownloaderCore.Chat;
 using TwitchDownloaderCore.Options;
 using TwitchDownloaderCore.Tools;
 using TwitchDownloaderCore.TwitchObjects;
@@ -18,6 +20,7 @@ namespace TwitchDownloaderCore
     {
         private readonly ChatDownloadOptions downloadOptions;
         private static HttpClient httpClient = new HttpClient();
+        private static readonly Regex _bitsRegex = new(@"(?:Cheer|BibleThump|cheerwhal|Corgo|Scoops|uni|ShowLove|Party|SeemsGood|Pride|Kappa|FrankerZ|HeyGuys|DansGame|EleGiggle|TriHard|Kreygasm|4Head|SwiftRage|NotLikeThis|FailFish|VoHiYo|PJSalt|MrDestructoid|bday|RIPCheer|Shamrock|DoodleCheer|BitBoss|Streamlabs|Muxy|HolidayCheer|Goal|Anon|Charity)(\d+)(?:\s|$)", RegexOptions.Compiled);
         private enum DownloadType { Clip, Video }
 
         public ChatDownloader(ChatDownloadOptions DownloadOptions)
@@ -63,6 +66,7 @@ namespace TwitchDownloaderCore
 
                     using (var httpResponse = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false))
                     {
+                        httpResponse.EnsureSuccessStatusCode();
                         response = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
                     }
 
@@ -173,6 +177,11 @@ namespace TwitchDownloaderCore
                 message.user_badges = badges;
                 message.user_color = oldComment.message.userColor;
                 message.emoticons = emoticons;
+                var bitMatch = _bitsRegex.Match(message.body);
+                if (bitMatch.Success)
+                {
+                    message.bits_spent = int.Parse(bitMatch.Groups[1].Value);
+                }
                 newComment.message = message;
 
                 returnList.Add(newComment);
@@ -190,7 +199,7 @@ namespace TwitchDownloaderCore
             DownloadType downloadType = downloadOptions.Id.All(char.IsDigit) ? DownloadType.Video : DownloadType.Clip;
 
             List<Comment> comments = new List<Comment>();
-            ChatRoot chatRoot = new ChatRoot() { FileInfo = new ChatRootInfo() { Version = new ChatRootVersion(1, 1, 0) }, streamer = new Streamer(), video = new Video(), comments = comments };
+            ChatRoot chatRoot = new() { FileInfo = new() { Version = ChatRootVersion.CurrentVersion, CreatedAt = DateTime.Now }, streamer = new(), video = new(), comments = comments };
 
             string videoId = downloadOptions.Id;
             string videoTitle;
@@ -203,40 +212,59 @@ namespace TwitchDownloaderCore
 
             if (downloadType == DownloadType.Video)
             {
-                GqlVideoResponse taskVideoInfo = await TwitchHelper.GetVideoInfo(int.Parse(videoId));
-                if (taskVideoInfo.data.video == null)
+                GqlVideoResponse videoInfoResponse = await TwitchHelper.GetVideoInfo(int.Parse(videoId));
+                if (videoInfoResponse.data.video == null)
                 {
                     throw new NullReferenceException("Invalid VOD, deleted/expired VOD possibly?");
                 }
 
-                chatRoot.streamer.name = taskVideoInfo.data.video.owner.displayName;
-                chatRoot.streamer.id = int.Parse(taskVideoInfo.data.video.owner.id);
-                videoTitle = taskVideoInfo.data.video.title;
-                videoCreatedAt = taskVideoInfo.data.video.createdAt;
+                chatRoot.streamer.name = videoInfoResponse.data.video.owner.displayName;
+                chatRoot.streamer.id = int.Parse(videoInfoResponse.data.video.owner.id);
+                videoTitle = videoInfoResponse.data.video.title;
+                videoCreatedAt = videoInfoResponse.data.video.createdAt;
                 videoStart = downloadOptions.CropBeginning ? downloadOptions.CropBeginningTime : 0.0;
-                videoEnd = downloadOptions.CropEnding ? downloadOptions.CropEndingTime : taskVideoInfo.data.video.lengthSeconds;
-                videoTotalLength = taskVideoInfo.data.video.lengthSeconds;
+                videoEnd = downloadOptions.CropEnding ? downloadOptions.CropEndingTime : videoInfoResponse.data.video.lengthSeconds;
+                videoTotalLength = videoInfoResponse.data.video.lengthSeconds;
+
+                GqlVideoChapterResponse videoChapterResponse = await TwitchHelper.GetVideoChapters(int.Parse(videoId));
+                foreach (var responseChapter in videoChapterResponse.data.video.moments.edges)
+                {
+                    VideoChapter chapter = new()
+                    {
+                        id = responseChapter.node.id,
+                        startMilliseconds = responseChapter.node.positionMilliseconds,
+                        lengthMilliseconds = responseChapter.node.durationMilliseconds,
+                        _type = responseChapter.node._type,
+                        description = responseChapter.node.description,
+                        subDescription = responseChapter.node.subDescription,
+                        thumbnailUrl = responseChapter.node.thumbnailURL,
+                        gameId = responseChapter.node.details.game.id,
+                        gameDisplayName = responseChapter.node.details.game.displayName,
+                        gameBoxArtUrl = responseChapter.node.details.game.boxArtURL
+                    };
+                    chatRoot.video.chapters.Add(chapter);
+                }
             }
             else
             {
-                GqlClipResponse taskClipInfo = await TwitchHelper.GetClipInfo(videoId);
-                if (taskClipInfo.data.clip.video == null || taskClipInfo.data.clip.videoOffsetSeconds == null)
+                GqlClipResponse clipInfoResponse = await TwitchHelper.GetClipInfo(videoId);
+                if (clipInfoResponse.data.clip.video == null || clipInfoResponse.data.clip.videoOffsetSeconds == null)
                 {
                     throw new NullReferenceException("Invalid VOD for clip, deleted/expired VOD possibly?");
                 }
 
-                videoId = taskClipInfo.data.clip.video.id;
+                videoId = clipInfoResponse.data.clip.video.id;
                 downloadOptions.CropBeginning = true;
-                downloadOptions.CropBeginningTime = (int)taskClipInfo.data.clip.videoOffsetSeconds;
+                downloadOptions.CropBeginningTime = (int)clipInfoResponse.data.clip.videoOffsetSeconds;
                 downloadOptions.CropEnding = true;
-                downloadOptions.CropEndingTime = downloadOptions.CropBeginningTime + taskClipInfo.data.clip.durationSeconds;
-                chatRoot.streamer.name = taskClipInfo.data.clip.broadcaster.displayName;
-                chatRoot.streamer.id = int.Parse(taskClipInfo.data.clip.broadcaster.id);
-                videoTitle = taskClipInfo.data.clip.title;
-                videoCreatedAt = taskClipInfo.data.clip.createdAt;
-                videoStart = (int)taskClipInfo.data.clip.videoOffsetSeconds;
-                videoEnd = (int)taskClipInfo.data.clip.videoOffsetSeconds + taskClipInfo.data.clip.durationSeconds;
-                videoTotalLength = taskClipInfo.data.clip.durationSeconds;
+                downloadOptions.CropEndingTime = downloadOptions.CropBeginningTime + clipInfoResponse.data.clip.durationSeconds;
+                chatRoot.streamer.name = clipInfoResponse.data.clip.broadcaster.displayName;
+                chatRoot.streamer.id = int.Parse(clipInfoResponse.data.clip.broadcaster.id);
+                videoTitle = clipInfoResponse.data.clip.title;
+                videoCreatedAt = clipInfoResponse.data.clip.createdAt;
+                videoStart = (int)clipInfoResponse.data.clip.videoOffsetSeconds;
+                videoEnd = (int)clipInfoResponse.data.clip.videoOffsetSeconds + clipInfoResponse.data.clip.durationSeconds;
+                videoTotalLength = clipInfoResponse.data.clip.durationSeconds;
                 connectionCount = 1;
             }
 
@@ -281,7 +309,7 @@ namespace TwitchDownloaderCore
                         }
                         percent /= connectionCount;
 
-                        progress.Report(new ProgressReport() { ReportType = ReportType.StatusInfo, Data = $"Downloading {percent}%" });
+                        progress.Report(new ProgressReport() { ReportType = ReportType.SameLineStatus, Data = $"Downloading {percent}%" });
                         progress.Report(new ProgressReport() { ReportType = ReportType.Percent, Data = percent });
                     }
                 });
@@ -296,12 +324,12 @@ namespace TwitchDownloaderCore
 
             if (downloadOptions.EmbedData && (downloadOptions.DownloadFormat is ChatFormat.Json or ChatFormat.Html))
             {
-                progress.Report(new ProgressReport() { ReportType = ReportType.Status, Data = "Downloading + Embedding Images" });
+                progress.Report(new ProgressReport() { ReportType = ReportType.NewLineStatus, Data = "Downloading + Embedding Images" });
                 chatRoot.embeddedData = new EmbeddedData();
 
                 // This is the exact same process as in ChatUpdater.cs but not in a task oriented manner
                 // TODO: Combine this with ChatUpdater in a different file
-                List<TwitchEmote> thirdPartyEmotes = await TwitchHelper.GetThirdPartyEmotes(chatRoot.streamer.id, downloadOptions.TempFolder, bttv: downloadOptions.BttvEmotes, ffz: downloadOptions.FfzEmotes, stv: downloadOptions.StvEmotes);
+                List<TwitchEmote> thirdPartyEmotes = await TwitchHelper.GetThirdPartyEmotes(chatRoot.streamer.id, downloadOptions.TempFolder, bttv: downloadOptions.BttvEmotes, ffz: downloadOptions.FfzEmotes, stv: downloadOptions.StvEmotes, cancellationToken: cancellationToken);
                 List<TwitchEmote> firstPartyEmotes = await TwitchHelper.GetEmotes(comments, downloadOptions.TempFolder);
                 List<ChatBadge> twitchBadges = await TwitchHelper.GetChatBadges(chatRoot.streamer.id, downloadOptions.TempFolder);
                 List<CheerEmote> twitchBits = await TwitchHelper.GetBits(downloadOptions.TempFolder, chatRoot.streamer.id.ToString());
@@ -359,7 +387,7 @@ namespace TwitchDownloaderCore
             if (downloadOptions.DownloadFormat is ChatFormat.Json)
             {
                 //Best effort, but if we fail oh well
-                progress.Report(new ProgressReport() { ReportType = ReportType.Status, Data = "Backfilling commenter info" });
+                progress.Report(new ProgressReport() { ReportType = ReportType.NewLineStatus, Data = "Backfilling commenter info" });
                 List<string> userList = chatRoot.comments.DistinctBy(x => x.commenter._id).Select(x => x.commenter._id).ToList();
                 Dictionary<string, User> userInfo = new Dictionary<string, User>();
                 int batchSize = 100;
@@ -396,13 +424,14 @@ namespace TwitchDownloaderCore
                 }
             }
 
+            progress.Report(new ProgressReport(ReportType.NewLineStatus, "Writing output file"));
             switch (downloadOptions.DownloadFormat)
             {
                 case ChatFormat.Json:
-                    ChatJson.Serialize(downloadOptions.Filename, chatRoot);
+                    await ChatJson.SerializeAsync(downloadOptions.Filename, chatRoot, downloadOptions.Compression, cancellationToken);
                     break;
                 case ChatFormat.Html:
-                    await ChatHtml.SerializeAsync(downloadOptions.Filename, chatRoot, downloadOptions.EmbedData);
+                    await ChatHtml.SerializeAsync(downloadOptions.Filename, chatRoot, downloadOptions.EmbedData, cancellationToken);
                     break;
                 case ChatFormat.Text:
                     await ChatText.SerializeAsync(downloadOptions.Filename, chatRoot, downloadOptions.TimeFormat);

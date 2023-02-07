@@ -546,8 +546,8 @@
   <data name="Update" xml:space="preserve">
     <value>Update</value>
   </data>
-  <data name="UpdateTime" xml:space="preserve">
-    <value>Update Time:</value>
+  <data name="UpdateRate" xml:space="preserve">
+    <value>Update Rate:</value>
   </data>
   <data name="UrlList" xml:space="preserve">
     <value>URL List</value>
@@ -597,11 +597,11 @@
   <data name="RenderChat" xml:space="preserve">
     <value>Render Chat</value>
   </data>
-  <data name="AccentIndentScale" xml:space="preserve">
-    <value>Accent Indent Scale:</value>
+  <data name="HighlightIndentScale" xml:space="preserve">
+    <value>Highlight Indent Scale:</value>
   </data>
-  <data name="AccentStrokeScale" xml:space="preserve">
-    <value>Accent Stoke Scale:</value>
+  <data name="HighlightStrokeScale" xml:space="preserve">
+    <value>Highlight Stoke Scale:</value>
   </data>
   <data name="BadgeScale" xml:space="preserve">
     <value>Badge Scale:</value>
@@ -615,8 +615,8 @@
   <data name="EmoteSpacingScale" xml:space="preserve">
     <value>Emote Spacing Scale:</value>
   </data>
-  <data name="LeftSpacingScale" xml:space="preserve">
-    <value>Left Spacing Scale:</value>
+  <data name="SidePaddingScale" xml:space="preserve">
+    <value>Side Padding Scale:</value>
   </data>
   <data name="SectionHeightScale" xml:space="preserve">
     <value>Section Height Scale:</value>
@@ -626,5 +626,36 @@
   </data>
   <data name="WordSpacingScale" xml:space="preserve">
     <value>Word Spacing Scale:</value>
+  </data>
+  <data name="FileNotFound" xml:space="preserve">
+    <value>File Not Found: </value>
+    <comment>Leave a trailing space</comment>
+  </data>
+  <data name="FatalError" xml:space="preserve">
+    <value>Fatal Error</value>
+  </data>
+  <data name="ThemeNotFound" xml:space="preserve">
+    <value>Theme not found</value>
+  </data>
+  <data name="ThemeNotFoundMessage" xml:space="preserve">
+    <value>{theme} was not found. Reverting theme to System</value>
+    <comment>Do not translate {theme}</comment>
+  </data>
+  <data name="MessageDispersion" xml:space="preserve">
+    <value>Dispersion </value>
+    <comment>Leave a trailing space</comment>
+  </data>
+  <data name="MessageDispersionTooltip" xml:space="preserve">
+    <value>In November 2022 a Twitch API change made chat messages download only in whole seconds. If there are multiple messages on a second, they will be intelligently distributed over the second to improve chat flow.</value>
+  </data>
+  <data name="ChatCompression" xml:space="preserve">
+    <value>Compression:</value>
+  </data>
+  <data name="ChatCompressionNone" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="ChatCompressionGzip" xml:space="preserve">
+    <value>Gzip</value>
+    <comment>Do not translate</comment>
   </data>
 </root>

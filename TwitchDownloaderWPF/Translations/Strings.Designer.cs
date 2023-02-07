@@ -61,24 +61,6 @@ namespace TwitchDownloaderWPF.Translations {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Accent Indent Scale:.
-        /// </summary>
-        public static string AccentIndentScale {
-            get {
-                return ResourceManager.GetString("AccentIndentScale", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Accent Stoke Scale:.
-        /// </summary>
-        public static string AccentStrokeScale {
-            get {
-                return ResourceManager.GetString("AccentStrokeScale", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Accept.
         /// </summary>
         public static string Accept {
@@ -219,6 +201,33 @@ namespace TwitchDownloaderWPF.Translations {
         public static string ChatBadges {
             get {
                 return ResourceManager.GetString("ChatBadges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Compression:.
+        /// </summary>
+        public static string ChatCompression {
+            get {
+                return ResourceManager.GetString("ChatCompression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gzip.
+        /// </summary>
+        public static string ChatCompressionGzip {
+            get {
+                return ResourceManager.GetString("ChatCompressionGzip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string ChatCompressionNone {
+            get {
+                return ResourceManager.GetString("ChatCompressionNone", resourceCulture);
             }
         }
         
@@ -601,6 +610,15 @@ namespace TwitchDownloaderWPF.Translations {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fatal Error.
+        /// </summary>
+        public static string FatalError {
+            get {
+                return ResourceManager.GetString("FatalError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Input Arguments:.
         /// </summary>
         public static string FfmpegInputArguments {
@@ -664,6 +682,15 @@ namespace TwitchDownloaderWPF.Translations {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to File Not Found: .
+        /// </summary>
+        public static string FileNotFound {
+            get {
+                return ResourceManager.GetString("FileNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Font Color:.
         /// </summary>
         public static string FontColor {
@@ -696,6 +723,24 @@ namespace TwitchDownloaderWPF.Translations {
         public static string HideDonationButton {
             get {
                 return ResourceManager.GetString("HideDonationButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Highlight Indent Scale:.
+        /// </summary>
+        public static string HighlightIndentScale {
+            get {
+                return ResourceManager.GetString("HighlightIndentScale", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Highlight Stoke Scale:.
+        /// </summary>
+        public static string HighlightStrokeScale {
+            get {
+                return ResourceManager.GetString("HighlightStrokeScale", resourceCulture);
             }
         }
         
@@ -790,15 +835,6 @@ namespace TwitchDownloaderWPF.Translations {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Left Spacing Scale:.
-        /// </summary>
-        public static string LeftSpacingScale {
-            get {
-                return ResourceManager.GetString("LeftSpacingScale", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Length:.
         /// </summary>
         public static string Length {
@@ -831,6 +867,24 @@ namespace TwitchDownloaderWPF.Translations {
         public static string MassDownloads {
             get {
                 return ResourceManager.GetString("MassDownloads", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dispersion .
+        /// </summary>
+        public static string MessageDispersion {
+            get {
+                return ResourceManager.GetString("MessageDispersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to In November 2022 a Twitch API change made chat messages download only in whole seconds. If there are multiple messages on a second, they will be intelligently distributed over the second to improve chat flow..
+        /// </summary>
+        public static string MessageDispersionTooltip {
+            get {
+                return ResourceManager.GetString("MessageDispersionTooltip", resourceCulture);
             }
         }
         
@@ -1096,6 +1150,15 @@ namespace TwitchDownloaderWPF.Translations {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Side Padding Scale:.
+        /// </summary>
+        public static string SidePaddingScale {
+            get {
+                return ResourceManager.GetString("SidePaddingScale", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Sort:.
         /// </summary>
         public static string Sort {
@@ -1236,6 +1299,24 @@ namespace TwitchDownloaderWPF.Translations {
         public static string TemplateVods {
             get {
                 return ResourceManager.GetString("TemplateVods", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Theme not found.
+        /// </summary>
+        public static string ThemeNotFound {
+            get {
+                return ResourceManager.GetString("ThemeNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {theme} was not found. Reverting theme to System.
+        /// </summary>
+        public static string ThemeNotFoundMessage {
+            get {
+                return ResourceManager.GetString("ThemeNotFoundMessage", resourceCulture);
             }
         }
         
@@ -1438,11 +1519,11 @@ namespace TwitchDownloaderWPF.Translations {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Update Time:.
+        ///   Looks up a localized string similar to Update Rate:.
         /// </summary>
-        public static string UpdateTime {
+        public static string UpdateRate {
             get {
-                return ResourceManager.GetString("UpdateTime", resourceCulture);
+                return ResourceManager.GetString("UpdateRate", resourceCulture);
             }
         }
         

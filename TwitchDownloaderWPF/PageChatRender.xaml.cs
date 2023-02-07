@@ -41,7 +41,7 @@ namespace TwitchDownloaderWPF
         private void btnBrowse_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "JSON Files | *.json";
+            openFileDialog.Filter = "JSON Files | *.json;*.json.gz";
             openFileDialog.RestoreDirectory = true;
 
             if (openFileDialog.ShowDialog() == true)
@@ -71,7 +71,7 @@ namespace TwitchDownloaderWPF
                 EmoteScale = double.Parse(textEmoteScale.Text, CultureInfo.CurrentCulture),
                 BadgeScale = double.Parse(textBadgeScale.Text, CultureInfo.CurrentCulture),
                 EmojiScale = double.Parse(textEmojiScale.Text, CultureInfo.CurrentCulture),
-                LeftSpacingScale = double.Parse(textLeftScale.Text, CultureInfo.CurrentCulture),
+                SidePaddingScale = double.Parse(textSidePaddingScale.Text, CultureInfo.CurrentCulture),
                 SectionHeightScale = double.Parse(textSectionHeightScale.Text, CultureInfo.CurrentCulture),
                 WordSpacingScale = double.Parse(textWordSpaceScale.Text, CultureInfo.CurrentCulture),
                 EmoteSpacingScale = double.Parse(textEmoteSpaceScale.Text, CultureInfo.CurrentCulture),
@@ -79,7 +79,7 @@ namespace TwitchDownloaderWPF
                 AccentStrokeScale = double.Parse(textAccentStrokeScale.Text, CultureInfo.CurrentCulture),
                 VerticalSpacingScale = double.Parse(textVerticalScale.Text, CultureInfo.CurrentCulture),
                 IgnoreUsersArray = textIgnoreUsersList.Text.ToLower().Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries),
-                BannedWordsArray = textBannedWordsList.Text.ToLower().Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries),
+                BannedWordsArray = textBannedWordsList.Text.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries),
                 Timestamp = (bool)checkTimestamp.IsChecked,
                 MessageColor = messageColor,
                 Framerate = int.Parse(textFramerate.Text),
@@ -94,6 +94,7 @@ namespace TwitchDownloaderWPF
                 SubMessages = (bool)checkSub.IsChecked,
                 ChatBadges = (bool)checkBadge.IsChecked,
                 Offline = (bool)checkOffline.IsChecked,
+                DisperseCommentOffsets = (bool)checkDispersion.IsChecked,
                 LogFfmpegOutput = true
             };
             foreach (var item in comboBadges.SelectedItems)
@@ -111,7 +112,7 @@ namespace TwitchDownloaderWPF
                 case ReportType.Percent:
                     statusProgressBar.Value = (int)progress.Data;
                     break;
-                case ReportType.Status or ReportType.StatusInfo:
+                case ReportType.NewLineStatus or ReportType.SameLineStatus:
                     statusMessage.Text = (string)progress.Data;
                     break;
                 case ReportType.Log:
@@ -147,7 +148,7 @@ namespace TwitchDownloaderWPF
                 textEmojiScale.Text = Settings.Default.EmojiScale.ToString("0.0#");
                 textBadgeScale.Text = Settings.Default.BadgeScale.ToString("0.0#");
                 textVerticalScale.Text = Settings.Default.VerticalSpacingScale.ToString("0.0#");
-                textLeftScale.Text = Settings.Default.LeftSpacingScale.ToString("0.0#");
+                textSidePaddingScale.Text = Settings.Default.LeftSpacingScale.ToString("0.0#");
                 textSectionHeightScale.Text = Settings.Default.SectionHeightScale.ToString("0.0#");
                 textWordSpaceScale.Text = Settings.Default.WordSpacingScale.ToString("0.0#");
                 textEmoteSpaceScale.Text = Settings.Default.EmoteSpacingScale.ToString("0.0#");
@@ -156,6 +157,7 @@ namespace TwitchDownloaderWPF
                 textIgnoreUsersList.Text = Settings.Default.IgnoreUsersList;
                 textBannedWordsList.Text = Settings.Default.BannedWordsList;
                 checkOffline.IsChecked = Settings.Default.Offline;
+                checkDispersion.IsChecked = Settings.Default.DisperseCommentOffsets;
 
                 comboBadges.Items.Add(new ChatBadgeListItem() { Type = ChatBadgeType.Broadcaster, Name = "Broadcaster" });
                 comboBadges.Items.Add(new ChatBadgeListItem() { Type = ChatBadgeType.Moderator, Name = "Mods" });
@@ -249,6 +251,7 @@ namespace TwitchDownloaderWPF
             Settings.Default.SubMessages = (bool)checkSub.IsChecked;
             Settings.Default.ChatBadges = (bool)checkBadge.IsChecked;
             Settings.Default.Offline = (bool)checkOffline.IsChecked;
+            Settings.Default.DisperseCommentOffsets = (bool)checkDispersion.IsChecked;
             if (comboFormat.SelectedItem != null)
             {
                 Settings.Default.VideoContainer = ((VideoContainer)comboFormat.SelectedItem).Name;
@@ -279,7 +282,7 @@ namespace TwitchDownloaderWPF
                 Settings.Default.EmojiScale = double.Parse(textEmojiScale.Text, CultureInfo.CurrentCulture);
                 Settings.Default.BadgeScale = double.Parse(textBadgeScale.Text, CultureInfo.CurrentCulture);
                 Settings.Default.VerticalSpacingScale = double.Parse(textVerticalScale.Text, CultureInfo.CurrentCulture);
-                Settings.Default.LeftSpacingScale = double.Parse(textLeftScale.Text, CultureInfo.CurrentCulture);
+                Settings.Default.LeftSpacingScale = double.Parse(textSidePaddingScale.Text, CultureInfo.CurrentCulture);
                 Settings.Default.SectionHeightScale = double.Parse(textSectionHeightScale.Text, CultureInfo.CurrentCulture);
                 Settings.Default.WordSpacingScale = double.Parse(textWordSpaceScale.Text, CultureInfo.CurrentCulture);
                 Settings.Default.EmoteSpacingScale = double.Parse(textEmoteSpaceScale.Text, CultureInfo.CurrentCulture);
@@ -294,7 +297,7 @@ namespace TwitchDownloaderWPF
         {
             if (!File.Exists(textJson.Text))
             {
-                AppendLog("ERROR: JSON File Not Found");
+                AppendLog(Translations.Strings.ErrorLog + Translations.Strings.FileNotFound + textJson.Text);
                 return false;
             }
 
@@ -308,7 +311,7 @@ namespace TwitchDownloaderWPF
                 double.Parse(textBadgeScale.Text, CultureInfo.CurrentCulture);
                 double.Parse(textEmojiScale.Text, CultureInfo.CurrentCulture);
                 double.Parse(textVerticalScale.Text, CultureInfo.CurrentCulture);
-                double.Parse(textLeftScale.Text, CultureInfo.CurrentCulture);
+                double.Parse(textSidePaddingScale.Text, CultureInfo.CurrentCulture);
                 double.Parse(textSectionHeightScale.Text, CultureInfo.CurrentCulture);
                 double.Parse(textWordSpaceScale.Text, CultureInfo.CurrentCulture);
                 double.Parse(textEmoteSpaceScale.Text, CultureInfo.CurrentCulture);
@@ -317,10 +320,10 @@ namespace TwitchDownloaderWPF
             }
             catch (Exception ex)
             {
-                AppendLog("ERROR: " + ex.Message);
+                AppendLog(Translations.Strings.ErrorLog + ex.Message);
                 if (Settings.Default.VerboseErrors)
                 {
-                    MessageBox.Show(ex.ToString(), "Verbose error output", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(ex.ToString(), Translations.Strings.VerboseErrorOutput, MessageBoxButton.OK, MessageBoxImage.Error);
                 }
                 return false;
             }
@@ -334,15 +337,14 @@ namespace TwitchDownloaderWPF
                 }
                 else
                 {
-                    AppendLog("ERROR: You've selected an alpha channel (transparency) for a container/codec that does not support it.");
-                    AppendLog("Remove transparency or encode with MOV and RLE/PRORES (file size will be large)");
+                    AppendLog(Translations.Strings.ErrorLog + Translations.Strings.AlphaNotSupportedByCodec);
                     return false;
                 }
             }
 
             if (int.Parse(textHeight.Text) % 2 != 0 || int.Parse(textWidth.Text) % 2 != 0)
             {
-                AppendLog("ERROR: Height and Width must be even");
+                AppendLog(Translations.Strings.ErrorLog + Translations.Strings.RenderWidthHeightMustBeEven);
                 return false;
             }
 
@@ -386,17 +388,18 @@ namespace TwitchDownloaderWPF
             }
             comboFont.SelectedItem = "Inter Embedded";
 
-            Codec h264Codec = new Codec() { Name = "H264", InputArgs = "-framerate {fps} -f rawvideo -analyzeduration {max_int} -probesize {max_int} -pix_fmt bgra -video_size {width}x{height} -i -", OutputArgs = "-c:v libx264 -preset veryfast -crf 18 -pix_fmt yuv420p \"{save_path}\"" };
-            Codec h264NvencCodec = new Codec() { Name = "H264 NVIDIA", InputArgs = "-framerate {fps} -f rawvideo -analyzeduration {max_int} -probesize {max_int} -pix_fmt bgra -video_size {width}x{height} -i -", OutputArgs = "-c:v h264_nvenc -preset fast -cq 20 -pix_fmt yuv420p \"{save_path}\"" };
-            Codec h265Codec = new Codec() { Name = "H265", InputArgs = "-framerate {fps} -f rawvideo -analyzeduration {max_int} -probesize {max_int} -pix_fmt bgra -video_size {width}x{height} -i -", OutputArgs = "-c:v libx265 -preset veryfast -crf 18 -pix_fmt yuv420p \"{save_path}\"" };
+            Codec h264Codec = new Codec() { Name = "H264", InputArgs = "-framerate {fps} -f rawvideo -analyzeduration {max_int} -probesize {max_int} -pix_fmt bgra -video_size {width}x{height} -i -", OutputArgs = "-c:v libx264 -preset:v veryfast -crf 18 -pix_fmt yuv420p \"{save_path}\"" };
+            Codec h264NvencCodec = new Codec() { Name = "H264 NVIDIA", InputArgs = "-framerate {fps} -f rawvideo -analyzeduration {max_int} -probesize {max_int} -pix_fmt bgra -video_size {width}x{height} -i -", OutputArgs = "-c:v h264_nvenc -preset:v p4 -cq 20 -pix_fmt yuv420p \"{save_path}\"" };
+            Codec h265Codec = new Codec() { Name = "H265", InputArgs = "-framerate {fps} -f rawvideo -analyzeduration {max_int} -probesize {max_int} -pix_fmt bgra -video_size {width}x{height} -i -", OutputArgs = "-c:v libx265 -preset:v veryfast -crf 18 -pix_fmt yuv420p \"{save_path}\"" };
+            Codec h265NvencCodec = new Codec() { Name = "H265 NVIDIA", InputArgs = "-framerate {fps} -f rawvideo -analyzeduration {max_int} -probesize {max_int} -pix_fmt bgra -video_size {width}x{height} -i -", OutputArgs = "-c:v hevc_nvenc -preset:v p4 -cq 21 -pix_fmt yuv420p \"{save_path}\"" };
             Codec vp8Codec = new Codec() { Name = "VP8", InputArgs = "-framerate {fps} -f rawvideo -analyzeduration {max_int} -probesize {max_int} -pix_fmt bgra -video_size {width}x{height} -i -", OutputArgs = "-c:v libvpx -crf 18 -b:v 2M -pix_fmt yuva420p -auto-alt-ref 0 \"{save_path}\"" };
-            Codec vp9Codec = new Codec() { Name = "VP9", InputArgs = "-framerate {fps} -f rawvideo -analyzeduration {max_int} -probesize {max_int} -pix_fmt bgra -video_size {width}x{height} -i -", OutputArgs = "-c:v libvpx-vp9 -crf 18 -b:v 2M -pix_fmt yuva420p \"{save_path}\"" };
+            Codec vp9Codec = new Codec() { Name = "VP9", InputArgs = "-framerate {fps} -f rawvideo -analyzeduration {max_int} -probesize {max_int} -pix_fmt bgra -video_size {width}x{height} -i -", OutputArgs = "-c:v libvpx-vp9 -crf 18 -b:v 2M -deadline realtime -quality realtime -speed 3 -pix_fmt yuva420p \"{save_path}\"" };
             Codec rleCodec = new Codec() { Name = "RLE", InputArgs = "-framerate {fps} -f rawvideo -analyzeduration {max_int} -probesize {max_int} -pix_fmt bgra -video_size {width}x{height} -i -", OutputArgs = "-c:v qtrle -pix_fmt argb \"{save_path}\"" };
             Codec proresCodec = new Codec() { Name = "ProRes", InputArgs = "-framerate {fps} -f rawvideo -analyzeduration {max_int} -probesize {max_int} -pix_fmt bgra -video_size {width}x{height} -i -", OutputArgs = "-c:v prores_ks -qscale:v 62 -pix_fmt argb \"{save_path}\"" };
-            VideoContainer mp4Container = new VideoContainer() { Name = "MP4", SupportedCodecs = new List<Codec>() { h264Codec, h265Codec, h264NvencCodec } };
-            VideoContainer movContainer = new VideoContainer() { Name = "MOV", SupportedCodecs = new List<Codec>() { h264Codec, h265Codec, rleCodec, proresCodec } };
+            VideoContainer mp4Container = new VideoContainer() { Name = "MP4", SupportedCodecs = new List<Codec>() { h264Codec, h265Codec, h264NvencCodec, h265NvencCodec } };
+            VideoContainer movContainer = new VideoContainer() { Name = "MOV", SupportedCodecs = new List<Codec>() { h264Codec, h265Codec, rleCodec, proresCodec, h264NvencCodec, h265NvencCodec } };
             VideoContainer webmContainer = new VideoContainer() { Name = "WEBM", SupportedCodecs = new List<Codec>() { vp8Codec, vp9Codec } };
-            VideoContainer mkvContainer = new VideoContainer() { Name = "MKV", SupportedCodecs = new List<Codec>() { h264Codec, h265Codec, vp8Codec, vp9Codec } };
+            VideoContainer mkvContainer = new VideoContainer() { Name = "MKV", SupportedCodecs = new List<Codec>() { h264Codec, h265Codec, vp8Codec, vp9Codec, h264NvencCodec, h265NvencCodec } };
             comboFormat.Items.Add(mp4Container);
             comboFormat.Items.Add(movContainer);
             comboFormat.Items.Add(webmContainer);
@@ -510,7 +513,7 @@ namespace TwitchDownloaderWPF
                 string fileFormat = comboFormat.SelectedItem.ToString();
                 saveFileDialog.Filter = $"{fileFormat} Files | *.{fileFormat.ToLower()}";
                 saveFileDialog.RestoreDirectory = true;
-                saveFileDialog.FileName = Path.GetFileNameWithoutExtension(textJson.Text) + "." + fileFormat.ToLower();
+                saveFileDialog.FileName = Path.GetFileNameWithoutExtension(textJson.Text.Replace(".gz", "")) + "." + fileFormat.ToLower();
 
                 if (saveFileDialog.ShowDialog() != true)
                 {
@@ -523,7 +526,8 @@ namespace TwitchDownloaderWPF
 
                 ChatRenderOptions options = GetOptions(saveFileDialog.FileName);
 
-                ChatRenderer currentRender = new ChatRenderer(options);
+                Progress<ProgressReport> renderProgress = new Progress<ProgressReport>(OnProgressChanged);
+                ChatRenderer currentRender = new ChatRenderer(options, renderProgress);
                 await currentRender.ParseJsonAsync(new CancellationToken());
 
                 if (sender == null)
@@ -545,8 +549,6 @@ namespace TwitchDownloaderWPF
                     }
                 }
 
-                Progress<ProgressReport> renderProgress = new Progress<ProgressReport>(OnProgressChanged);
-
                 SetImage("Images/ppOverheat.gif", true);
                 statusMessage.Text = Translations.Strings.StatusRendering;
                 btnRender.IsEnabled = false;
@@ -554,7 +556,7 @@ namespace TwitchDownloaderWPF
                 try
                 {
                     ffmpegLog.Clear();
-                    await currentRender.RenderVideoAsync(renderProgress, new CancellationToken());
+                    await currentRender.RenderVideoAsync(new CancellationToken());
                     statusMessage.Text = Translations.Strings.StatusDone;
                     SetImage("Images/ppHop.gif", true);
                 }
@@ -579,12 +581,11 @@ namespace TwitchDownloaderWPF
                 statusProgressBar.Value = 0;
                 btnRender.IsEnabled = true;
 
-                currentRender = null;
                 GC.Collect();
             }
         }
 
-        private void MenuItem_Click(object sender, RoutedEventArgs e)
+        private void menuItemEnqueue_Click(object sender, RoutedEventArgs e)
         {
             if (ValidateInputs())
             {
@@ -593,7 +594,7 @@ namespace TwitchDownloaderWPF
             }
         }
 
-        private void MenuItem_Click_1(object sender, RoutedEventArgs e)
+        private void menuItemPartialRender_Click(object sender, RoutedEventArgs e)
         {
             SplitButton_Click(null, null);
         }

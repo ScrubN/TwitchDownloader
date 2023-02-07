@@ -1,9 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading;
 using TwitchDownloaderCLI.Modes.Arguments;
 using TwitchDownloaderCLI.Tools;
 using TwitchDownloaderCore;
+using TwitchDownloaderCore.Chat;
 using TwitchDownloaderCore.Options;
 
 namespace TwitchDownloaderCLI.Modes
@@ -22,9 +24,17 @@ namespace TwitchDownloaderCLI.Modes
 
         private static ChatDownloadOptions GetDownloadOptions(ChatDownloadArgs inputOptions)
         {
-            if (string.IsNullOrWhiteSpace(inputOptions.Id))
+            if (inputOptions.Id is null)
             {
-                Console.WriteLine("[ERROR] - Invalid ID, unable to parse.");
+                Console.WriteLine("[ERROR] - Vod/Clip ID/URL cannot be null!");
+                Environment.Exit(1);
+            }
+
+            var vodClipIdRegex = new Regex(@"(?:^|(?:twitch.tv\/(?:videos|\w+\/clip)\/))(\w+(?:-\w+)?)(?:$|\?)");
+            var vodClipIdMatch = vodClipIdRegex.Match(inputOptions.Id);
+            if (!vodClipIdMatch.Success)
+            {
+                Console.WriteLine("[ERROR] - Unable to parse Vod/Clip ID/URL.");
                 Environment.Exit(1);
             }
 
@@ -36,13 +46,13 @@ namespace TwitchDownloaderCLI.Modes
                     ".json" => ChatFormat.Json,
                     _ => ChatFormat.Text
                 },
-                Id = inputOptions.Id,
+                Id = vodClipIdMatch.Groups[1].ToString(),
                 CropBeginning = inputOptions.CropBeginningTime > 0.0,
                 CropBeginningTime = inputOptions.CropBeginningTime,
                 CropEnding = inputOptions.CropEndingTime > 0.0,
                 CropEndingTime = inputOptions.CropEndingTime,
                 EmbedData = inputOptions.EmbedData,
-                Filename = inputOptions.OutputFile,
+                Filename = inputOptions.Compression != ChatCompression.None ? inputOptions.OutputFile + ".gz" : inputOptions.OutputFile,
                 TimeFormat = inputOptions.TimeFormat,
                 ConnectionCount = inputOptions.ChatConnections,
                 BttvEmotes = (bool)inputOptions.BttvEmotes,

@@ -18,7 +18,7 @@ A cross platform command line tool that can do the main functions of the GUI pro
 <sup>Downloads a stream VOD or highlight from Twitch</sup>
 
 **-u / --id (REQUIRED)**
-The ID of the VOD to download, currently only accepts Integer IDs and will accept URLs in the future.
+The ID or URL of the VOD to download.
 
 **-o / --output (REQUIRED)**
 File the program will output to.
@@ -51,7 +51,7 @@ Path to temporary folder for cache.
 <sup>Downloads a clip from Twitch</sup>
 
 **-u / --id (REQUIRED)**
-The ID of the Clip to download, currently only accepts the string identifier and will accept URLs in the future.
+The ID or URL of the Clip to download.
 
 **-o / --output (REQUIRED)**
 File the program will output to.
@@ -64,10 +64,13 @@ The quality the program will attempt to download, for example "1080p60", if not 
 <sup>Downloads the chat of a VOD, highlight, or clip</sup>
 
 **-u / --id (REQUIRED)**
-The ID of the VOD or clip to download. Does not currently accept URLs.
+The ID or URL of the VOD or clip to download.
 
 **-o / --output (REQUIRED)**
-File the program will output to. File extension will be used to determine download type. Valid extensions are: `json`, `html`, and `txt`.
+File the program will output to. File extension will be used to determine download type. Valid extensions are: `.json`, `.html`, and `.txt`.
+
+**--compression**
+(Default: None) Compresses an output json chat file using a specified compression, usually resulting in 40-90% size reductions. Valid values are: `None`, `Gzip`. More formats will be supported in the future.
 
 **-b / --beginning**
 Time in seconds to crop beginning. For example if I had a 10 second stream but only wanted the last 7 seconds of it I would use `-b 3` to skip the first 3 seconds.
@@ -98,10 +101,13 @@ Time in seconds to crop ending. For example if I had a 10 second stream but only
 <sup>Updates the embeded emotes, badges, bits, and crops of a chat download and/or converts a JSON chat to another format</sup>
 
 **-i / --input (REQUIRED)**
-Path to input file. Valid extensions are: `json`.
+Path to input file. Valid extensions are: `.json`.
 
 **-o / --output (REQUIRED)**
-Path to output file. File extension will be used to determine new chat type. Valid extensions are: `json`, `html`, and `txt`.
+Path to output file. File extension will be used to determine new chat type. Valid extensions are: `.json`, `.html`, and `.txt`.
+
+**-c / --compression**
+(Default: None) Compresses an output json chat file using a specified compression, usually resulting in 40-90% size reductions. Valid values are: `None`, `Gzip`. More formats will be supported in the future.
 
 **-E / --embed-missing**
 (Default: false) Embed missing emotes, badges, and cheermotes. Already embedded images will be untouched.
@@ -152,6 +158,12 @@ File the program will output to.
 **-h / --chat-height**
 (Default: 600) Height of chat render.
 
+**-b / --beginning**
+(Default: -1) Time in seconds to crop the beginning of the render.
+
+**-e / --ending**
+(Default: -1) Time in seconds to crop the ending of the render.
+
 **--bttv**
 (Default: true) Enable BTTV emotes.
 
@@ -160,6 +172,9 @@ File the program will output to.
 
 **--stv**
 (Default: true) Enable 7TV emotes.
+
+**--allow-unlisted-emotes**
+(Default: true) Allow unlisted 7TV emotes in the render.
 
 **--sub-messages**
 (Default: true) Enable sub / re-sub messages.
@@ -214,17 +229,23 @@ File the program will output to.
 
 Other = `1`, Broadcaster = `2`, Moderator = `4`, VIP = `8`, Subscriber = `16`, Predictions = `32`, NoAudioVisual = `64`, PrimeGaming = `128`
 
+**--dispersion**
+(Default: false) In November 2022 a Twitch API change made chat messages download only in whole seconds. If there are multiple messages on a second, they will be intelligently distributed over the second to improve chat flow. Requires an update rate less than 1.0 for effective results.
+
 **--offline**
-Render completely offline using only embedded emotes, badges, and bits from the input json.
+(Default: false) Render completely offline using only embedded emotes, badges, and bits from the input json.
 
 **--ffmpeg-path**
-Path to ffmpeg executable.
+(Default: ) Path to ffmpeg executable.
 
 **--temp-path**
-Path to temporary folder for cache.
+(Default: ) Path to temporary folder for cache.
 
 **--verbose-ffmpeg**
-Prints every message from ffmpeg.
+(Default: false) Prints every message from ffmpeg.
+
+**--skip-drive-waiting**
+(Default: false) Do not wait for the output drive to transmit a ready signal before writing the next frame. Waiting is usually only necessary on low-end USB drives. Skipping can result in 1-5% render speed increases.
 
 **--scale-emote**
 (Default: 1.0) Number to scale emote images.
@@ -238,23 +259,23 @@ Prints every message from ffmpeg.
 **--scale-vertical**
 (Default: 1.0) Number to scale vertical padding.
 
-**--scale-left**
-(Default: 1.0) Number to scale left indent padding.
+**--scale-side-padding**
+(Default: 1.0) Number to scale side padding.
 
-**--scale-sectionheight**
+**--scale-section-height**
 (Default: 1.0) Number to scale section height of comments.
 
-**--scale-wordspace**
+**--scale-word-space**
 (Default: 1.0) Number to scale spacing between words.
 
-**--scale-emotespace**
+**--scale-emote-space**
 (Default: 1.0) Number to scale spacing between emotes.
 
-**--scale-accentstroke**
-(Default: 1.0) Number to scale accent stroke size (sub messages).
+**--scale-highlight-stroke**
+(Default: 1.0) Number to scale highlight stroke size (sub messages).
 
-**--scale-accentindent**
-(Default: 1.0) Number to scale accent indent size (sub messages).
+**--scale-highlight-indent**
+(Default: 1.0) Number to scale highlight indent size (sub messages).
 
 ## Arguments for mode ffmpeg
 <sup>Manage standalone ffmpeg</sup>
@@ -317,7 +338,7 @@ Render a chat with custom ffmpeg arguments
 
 ## Additional Notes
 
-String arguments, such as output file, that contain spaces should be wrapped in double quotes <kbd>"</kbd> .
+String arguments, such as output file, that contain spaces should be wrapped in either single quotes <kbd>'</kbd> or double quotes <kbd>"</kbd> .
 
 Default true boolean flags must be assigned: `--default-true-flag=false`. Default false boolean flags should still be raised normally: `--default-false-flag`
 

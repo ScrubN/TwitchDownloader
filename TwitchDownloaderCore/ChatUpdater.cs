@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using TwitchDownloaderCore.Chat;
 using TwitchDownloaderCore.Options;
 using TwitchDownloaderCore.Tools;
 using TwitchDownloaderCore.TwitchObjects;
@@ -31,6 +32,7 @@ namespace TwitchDownloaderCore
 
         public async Task UpdateAsync(IProgress<ProgressReport> progress, CancellationToken cancellationToken)
         {
+            chatRoot.FileInfo = new() { Version = ChatRootVersion.CurrentVersion, CreatedAt = chatRoot.FileInfo.CreatedAt, UpdatedAt = DateTime.Now };
             if (Path.GetExtension(_updateOptions.InputFile).ToLower() != ".json")
             {
                 throw new NotImplementedException("Only JSON chat files can be used as update input. HTML support may come in the future.");
@@ -45,7 +47,7 @@ namespace TwitchDownloaderCore
             // If we are editing the chat crop
             if (_updateOptions.CropBeginning || _updateOptions.CropEnding)
             {
-                progress.Report(new ProgressReport(ReportType.Status, string.Format("Updating Chat Crop [{0}/{1}]", ++currentStep, totalSteps)));
+                progress.Report(new ProgressReport(ReportType.SameLineStatus, string.Format("Updating Chat Crop [{0}/{1}]", ++currentStep, totalSteps)));
                 progress.Report(new ProgressReport(totalSteps / currentStep));
 
                 chatRoot.video ??= new Video();
@@ -86,7 +88,7 @@ namespace TwitchDownloaderCore
             // If we are updating/replacing embeds
             if (_updateOptions.EmbedMissing || _updateOptions.ReplaceEmbeds)
             {
-                progress.Report(new ProgressReport(ReportType.Status, string.Format("Updating Embeds [{0}/{1}]", ++currentStep, totalSteps)));
+                progress.Report(new ProgressReport(ReportType.NewLineStatus, string.Format("Updating Embeds [{0}/{1}]", ++currentStep, totalSteps)));
                 progress.Report(new ProgressReport(totalSteps / currentStep));
 
                 chatRoot.embeddedData ??= new EmbeddedData();
@@ -105,16 +107,16 @@ namespace TwitchDownloaderCore
             }
 
             // Finally save the output to file!
-            progress.Report(new ProgressReport(ReportType.Status, string.Format("Writing Output File [{0}/{1}]", ++currentStep, totalSteps)));
+            progress.Report(new ProgressReport(ReportType.NewLineStatus, string.Format("Writing Output File [{0}/{1}]", ++currentStep, totalSteps)));
             progress.Report(new ProgressReport(totalSteps / currentStep));
 
             switch (_updateOptions.OutputFormat)
             {
                 case ChatFormat.Json:
-                    ChatJson.Serialize(_updateOptions.OutputFile, chatRoot);
+                    await ChatJson.SerializeAsync(_updateOptions.OutputFile, chatRoot, _updateOptions.Compression, cancellationToken);
                     break;
                 case ChatFormat.Html:
-                    await ChatHtml.SerializeAsync(_updateOptions.OutputFile, chatRoot, chatRoot.embeddedData != null);
+                    await ChatHtml.SerializeAsync(_updateOptions.OutputFile, chatRoot, chatRoot.embeddedData != null, cancellationToken);
                     break;
                 case ChatFormat.Text:
                     await ChatText.SerializeAsync(_updateOptions.OutputFile, chatRoot, _updateOptions.TextTimestampFormat);
@@ -334,11 +336,6 @@ namespace TwitchDownloaderCore
             };
 
             return chatRoot;
-        }
-
-        ~ChatUpdater()
-        {
-            chatRoot = null;
         }
     }
 }
