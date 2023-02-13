@@ -803,4 +803,25 @@
   <data name="ChatCompression" xml:space="preserve">
     <value>Sıkıştırma:</value>
   </data>
+   <data name="ThemesFailedToWrite" xml:space="preserve">
+    <value>Dahil edilen bazı temalar yazılamadı.</value>
+  </data>
+   <data name="TitleGlobalSettings" xml:space="preserve">
+    <value>Genel Ayarlar</value>
+  </data>
+  <data name="TitleEnqueueOptions" xml:space="preserve">
+    <value>Sıraya Alma Seçenekleri</value>
+  </data>
+  <data name="TitleRenderRange" xml:space="preserve">
+    <value>Oluşturma Süresini seçin (Saniye)</value>
+  </data>
+  <data name="TitleUrlList" xml:space="preserve">
+    <value>Toplu İndirme URL Listesi</value>
+  </data>
+  <data name="TitleVideoMassDownloader" xml:space="preserve">
+    <value>Toplu Video İndirici</value>
+  </data>
+  <data name="TitleClipMassDownloader" xml:space="preserve">
+    <value>Toplu Klip İndirici</value>
+  </data>
 </root>
