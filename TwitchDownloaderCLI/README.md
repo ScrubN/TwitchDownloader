@@ -323,6 +323,9 @@ Other = `1`, Broadcaster = `2`, Moderator = `4`, VIP = `8`, Subscriber = `16`, P
 **-d / --download**
 (Default: `false`) Downloads FFmpeg as a standalone file.
 
+**--find**
+(Default: `false`) Tries to find a valid FFmpeg executable and logs the result.
+
 ## Arguments for mode cache
 #### Manage the working cache.
 
