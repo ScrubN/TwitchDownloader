@@ -18,7 +18,7 @@ namespace TwitchDownloaderCLI.Modes
 
             if (inputOptions.EncodeMetadata == true)
             {
-                FfmpegHandler.DetectFfmpeg(inputOptions.FfmpegPath, progress);
+                FfmpegHandler.EnsureFfmpegExists(inputOptions.FfmpegPath, progress);
             }
 
             var downloadOptions = GetDownloadOptions(inputOptions, progress);

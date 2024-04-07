@@ -63,7 +63,7 @@ namespace TwitchDownloaderCLI.Modes
             }
         }
 
-        public static void DetectFfmpeg(string ffmpegPath, ITaskLogger logger)
+        public static void EnsureFfmpegExists(string ffmpegPath, ITaskLogger logger)
         {
             if (File.Exists(ffmpegPath) || File.Exists(FfmpegExecutableName) || PathUtils.ExistsOnPATH(FfmpegExecutableName))
             {

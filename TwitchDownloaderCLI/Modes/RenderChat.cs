@@ -17,7 +17,7 @@ namespace TwitchDownloaderCLI.Modes
         {
             var progress = new CliTaskProgress(inputOptions.LogLevel);
 
-            FfmpegHandler.DetectFfmpeg(inputOptions.FfmpegPath, progress);
+            FfmpegHandler.EnsureFfmpegExists(inputOptions.FfmpegPath, progress);
 
             var renderOptions = GetRenderOptions(inputOptions, progress);
             using var chatRenderer = new ChatRenderer(renderOptions, progress);
