@@ -68,17 +68,6 @@ namespace TwitchDownloaderCLI.Modes
             }
         }
 
-        public static void EnsureFfmpegExists(string ffmpegPath, ITaskLogger logger)
-        {
-            if (FindFfmpeg(ffmpegPath) != null)
-            {
-                return;
-            }
-
-            logger.LogError("Unable to find FFmpeg, exiting. You can download FFmpeg automatically with the command \"TwitchDownloaderCLI ffmpeg -d\"");
-            Environment.Exit(1);
-        }
-
         private static void DetectFfmpeg(ITaskLogger progress)
         {
             if (FindFfmpeg() is { } ffmpegPath)
@@ -88,6 +77,17 @@ namespace TwitchDownloaderCLI.Modes
             }
 
             progress.LogInfo("Unable to find FFmpeg.");
+        }
+
+        public static void EnsureFfmpegExists(string ffmpegPath, ITaskLogger logger)
+        {
+            if (FindFfmpeg(ffmpegPath) != null)
+            {
+                return;
+            }
+
+            logger.LogError("Unable to find FFmpeg, exiting. You can download FFmpeg automatically with the command \"TwitchDownloaderCLI ffmpeg -d\"");
+            Environment.Exit(1);
         }
 
         private static string FindFfmpeg(string customFfmpegPath = null)
