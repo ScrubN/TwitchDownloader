@@ -7,5 +7,8 @@ namespace TwitchDownloaderCLI.Modes.Arguments
     {
         [Option('d', "download", Default = false, Required = false, HelpText = "Downloads FFmpeg as a standalone file.")]
         public bool DownloadFfmpeg { get; set; }
+
+        [Option("find", Default = false, Required = false, HelpText = "Tries to find a valid FFmpeg executable and logs the result.")]
+        public bool DetectFfmpeg { get; set; }
     }
 }

@@ -25,6 +25,11 @@ namespace TwitchDownloaderCLI.Modes
             {
                 DownloadFfmpeg(progress);
             }
+
+            if (args.DetectFfmpeg)
+            {
+                DetectFfmpeg(progress);
+            }
         }
 
         private static void DownloadFfmpeg(ITaskProgress progress)
@@ -65,13 +70,35 @@ namespace TwitchDownloaderCLI.Modes
 
         public static void EnsureFfmpegExists(string ffmpegPath, ITaskLogger logger)
         {
-            if (File.Exists(ffmpegPath) || File.Exists(FfmpegExecutableName) || PathUtils.ExistsOnPATH(FfmpegExecutableName))
+            if (FindFfmpeg(ffmpegPath) != null)
             {
                 return;
             }
 
             logger.LogError("Unable to find FFmpeg, exiting. You can download FFmpeg automatically with the command \"TwitchDownloaderCLI ffmpeg -d\"");
             Environment.Exit(1);
+        }
+
+        private static void DetectFfmpeg(ITaskLogger progress)
+        {
+            if (FindFfmpeg() is { } ffmpegPath)
+            {
+                progress.LogInfo($"Found FFmpeg at {ffmpegPath}.");
+                return;
+            }
+
+            progress.LogInfo("Unable to find FFmpeg.");
+        }
+
+        private static string FindFfmpeg(string customFfmpegPath = null)
+        {
+            if (File.Exists(customFfmpegPath)) return customFfmpegPath;
+
+            if (File.Exists(FfmpegExecutableName)) return FfmpegExecutableName;
+
+            if (PathUtils.GetFileOnPATH(FfmpegExecutableName) is { } ffmpegOnPATH) return ffmpegOnPATH;
+
+            return null;
         }
 
         private sealed class XabeProgressHandler : IProgress<ProgressInfo>, IDisposable
