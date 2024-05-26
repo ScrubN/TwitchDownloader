@@ -23,7 +23,7 @@ using TwitchDownloaderCore.TwitchObjects.Gql;
 
 namespace TwitchDownloaderCore
 {
-    public static class TwitchHelper
+    public static partial class TwitchHelper
     {
         private static readonly HttpClient httpClient = new HttpClient();
         private static readonly string[] BttvZeroWidth = { "SoSnowy", "IceCold", "SantaHat", "TopHat", "ReinDeer", "CandyCane", "cvMask", "cvHazmat" };
@@ -695,6 +695,9 @@ namespace TwitchDownloaderCore
 
             return returnList;
         }
+
+        [GeneratedRegex(@"\.(?:png|PNG)$", RegexOptions.RightToLeft)]
+        private static partial Regex EmojiExtensionRegex();
 
         public static async Task<Dictionary<string, SKBitmap>> GetEmojis(string cacheFolder, EmojiVendor emojiVendor, ITaskLogger logger, CancellationToken cancellationToken = default)
         {

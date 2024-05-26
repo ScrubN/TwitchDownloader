@@ -155,7 +155,7 @@ namespace TwitchDownloaderWPF
 
                     numStartHour.Maximum = (int)vodLength.TotalHours;
                     numStartMinute.Maximum = 59;
-                    var urlTimeCodeMatch = TwitchRegex.UrlTimeCode.Match(textUrl.Text);
+                    var urlTimeCodeMatch = TwitchRegex.UrlTimeCode().Match(textUrl.Text);
                     if (urlTimeCodeMatch.Success)
                     {
                         var time = UrlTimeCode.Parse(urlTimeCodeMatch.ValueSpan);
