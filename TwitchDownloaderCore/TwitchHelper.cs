@@ -9,6 +9,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -963,11 +964,7 @@ namespace TwitchDownloaderCore
             {
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
-                    directoryInfo.UnixFileMode = UnixFileMode.OtherExecute | UnixFileMode.OtherWrite | UnixFileMode.OtherRead
-                                                 | UnixFileMode.GroupExecute | UnixFileMode.GroupWrite | UnixFileMode.GroupRead
-                                                 | UnixFileMode.UserExecute | UnixFileMode.UserWrite | UnixFileMode.UserRead;
-
-                    directoryInfo.Refresh();
+                    Set777UnixFilePermissions(directoryInfo);
                 }
             }
             catch (Exception e)
@@ -976,6 +973,17 @@ namespace TwitchDownloaderCore
             }
 
             return directoryInfo;
+        }
+
+        [UnsupportedOSPlatform("windows")]
+        public static FileSystemInfo Set777UnixFilePermissions(FileSystemInfo fileSystemInfo)
+        {
+            fileSystemInfo.UnixFileMode = UnixFileMode.OtherExecute | UnixFileMode.OtherWrite | UnixFileMode.OtherRead
+                                          | UnixFileMode.GroupExecute | UnixFileMode.GroupWrite | UnixFileMode.GroupRead
+                                          | UnixFileMode.UserExecute | UnixFileMode.UserWrite | UnixFileMode.UserRead;
+
+            fileSystemInfo.Refresh();
+            return fileSystemInfo;
         }
 
         /// <summary>
