@@ -46,11 +46,13 @@ namespace TwitchDownloaderCore
         private List<TwitchEmote> emoteThirdList = new List<TwitchEmote>();
         private List<CheerEmote> cheermotesList = new List<CheerEmote>();
         private Dictionary<string, SKBitmap> emojiCache = new Dictionary<string, SKBitmap>();
-        private Dictionary<int, SKPaint> fallbackFontCache = new Dictionary<int, SKPaint>();
+        private Dictionary<int, SKFont> fallbackFontCache = new Dictionary<int, SKFont>();
         private bool noFallbackFontFound = false;
         private readonly SKFontManager fontManager = SKFontManager.CreateDefault();
-        private SKPaint messageFont;
-        private SKPaint nameFont;
+        private SKPaint messagePaint;
+        private SKFont messageFont;
+        private SKPaint namePaint;
+        private SKFont nameFont;
         private SKPaint outlinePaint;
         private readonly HighlightIcons highlightIcons;
 
@@ -63,9 +65,11 @@ namespace TwitchDownloaderCore
             renderOptions.BlockArtPreWrapWidth = 29.166 * renderOptions.FontSize - renderOptions.SidePadding * 2;
             renderOptions.BlockArtPreWrap = renderOptions.ChatWidth > renderOptions.BlockArtPreWrapWidth;
             _progress = progress;
-            outlinePaint = new SKPaint { Style = SKPaintStyle.Stroke, StrokeWidth = (float)(renderOptions.OutlineSize * renderOptions.ReferenceScale), StrokeJoin = SKStrokeJoin.Round, Color = SKColors.Black, IsAntialias = true, IsAutohinted = true, LcdRenderText = true, SubpixelText = true, HintingLevel = SKPaintHinting.Full, FilterQuality = SKFilterQuality.High };
-            nameFont = new SKPaint { LcdRenderText = true, SubpixelText = true, TextSize = (float)renderOptions.FontSize, IsAntialias = true, IsAutohinted = true, HintingLevel = SKPaintHinting.Full, FilterQuality = SKFilterQuality.High };
-            messageFont = new SKPaint { LcdRenderText = true, SubpixelText = true, TextSize = (float)renderOptions.FontSize, IsAntialias = true, IsAutohinted = true, HintingLevel = SKPaintHinting.Full, FilterQuality = SKFilterQuality.High, Color = renderOptions.MessageColor };
+            outlinePaint = new SKPaint { Style = SKPaintStyle.Stroke, StrokeWidth = (float)(renderOptions.OutlineSize * renderOptions.ReferenceScale), StrokeJoin = SKStrokeJoin.Round, Color = SKColors.Black, IsAntialias = true };
+            namePaint = new SKPaint { IsAntialias = true };
+            messagePaint = new SKPaint { IsAntialias = true, Color = renderOptions.MessageColor };
+            nameFont = new SKFont { Size = (float)renderOptions.FontSize, Edging = SKFontEdging.SubpixelAntialias, Subpixel = true, ForceAutoHinting = true, Hinting = SKFontHinting.Full };
+            messageFont = new SKFont { Size = (float)renderOptions.FontSize, Edging = SKFontEdging.SubpixelAntialias, Subpixel = true, ForceAutoHinting = true, Hinting = SKFontHinting.Full };
             highlightIcons = new HighlightIcons(renderOptions, Purple, outlinePaint);
         }
 
@@ -259,8 +263,7 @@ namespace TwitchDownloaderCore
             Stopwatch stopwatch = Stopwatch.StartNew();
 
             // Measure some sample text to determine the text height, cannot assume it is font size
-            SKRect sampleTextBounds = new SKRect();
-            messageFont.MeasureText("ABC123", ref sampleTextBounds);
+            messageFont.MeasureText("ABC123", out var sampleTextBounds, messagePaint);
             int sectionDefaultYPos = (int)(((renderOptions.SectionHeight - sampleTextBounds.Height) / 2.0) + sampleTextBounds.Height);
 
             for (int currentTick = startTick; currentTick < endTick; currentTick++)
@@ -685,7 +688,7 @@ namespace TwitchDownloaderCore
             drawPos.X += renderOptions.AccentIndentWidth;
             defaultPos.X = drawPos.X;
 
-            var highlightIcon = highlightIcons.GetHighlightIcon(highlightType, messageFont.Color);
+            var highlightIcon = highlightIcons.GetHighlightIcon(highlightType, messagePaint.Color);
 
             Point iconPoint = new()
             {
@@ -780,7 +783,7 @@ namespace TwitchDownloaderCore
 
             if (comment.message.fragments.Count == 1)
             {
-                DrawUsername(comment, sectionImages, ref drawPos, defaultPos, false, messageFont.Color);
+                DrawUsername(comment, sectionImages, ref drawPos, defaultPos, false, messagePaint.Color);
 
                 var bitsBadgeVersion = comment.message.user_badges.FirstOrDefault(x => x._id == "bits")?.version;
                 if (bitsBadgeVersion is not null)
@@ -799,7 +802,7 @@ namespace TwitchDownloaderCore
             else
             {
                 // This should never be possible, but just in case.
-                DrawUsername(comment, sectionImages, ref drawPos, defaultPos, true, messageFont.Color);
+                DrawUsername(comment, sectionImages, ref drawPos, defaultPos, true, messagePaint.Color);
             }
 
             DrawMessage(comment, sectionImages, emotePositionList, false, ref drawPos, defaultPos);
@@ -1098,23 +1101,21 @@ namespace TwitchDownloaderCore
                 {
                     if (inFontBuffer.Length > 0)
                     {
-                        DrawText(inFontBuffer.ToString(), messageFont, false, sectionImages, ref drawPos, defaultPos, highlightWords);
+                        DrawText(inFontBuffer.ToString(), messageFont, messagePaint, false, sectionImages, ref drawPos, defaultPos, highlightWords);
                         inFontBuffer.Clear();
                     }
                     if (nonFontBuffer.Length > 0)
                     {
-                        using SKPaint nonFontFallbackFont = GetFallbackFont(nonFontBuffer[0]).Clone();
-                        nonFontFallbackFont.Color = renderOptions.MessageColor;
-                        DrawText(nonFontBuffer.ToString(), nonFontFallbackFont, false, sectionImages, ref drawPos, defaultPos, highlightWords);
+                        var fallbackFont = GetFallbackFont(nonFontBuffer[0]);
+                        DrawText(nonFontBuffer.ToString(), fallbackFont, messagePaint, false, sectionImages, ref drawPos, defaultPos, highlightWords);
                         nonFontBuffer.Clear();
                     }
                     int utf32Char = char.ConvertToUtf32(fragmentSpan[j], fragmentSpan[j + 1]);
                     //Don't attempt to draw U+E0000
                     if (utf32Char != 0xE0000)
                     {
-                        using SKPaint highSurrogateFallbackFont = GetFallbackFont(utf32Char).Clone();
-                        highSurrogateFallbackFont.Color = renderOptions.MessageColor;
-                        DrawText(fragmentSpan.Slice(j, 2).ToString(), highSurrogateFallbackFont, false, sectionImages, ref drawPos, defaultPos, highlightWords);
+                        var fallbackFont = GetFallbackFont(utf32Char);
+                        DrawText(fragmentSpan.Slice(j, 2).ToString(), fallbackFont, messagePaint, false, sectionImages, ref drawPos, defaultPos, highlightWords);
                     }
                     j++;
                 }
@@ -1122,7 +1123,7 @@ namespace TwitchDownloaderCore
                 {
                     if (inFontBuffer.Length > 0)
                     {
-                        DrawText(inFontBuffer.ToString(), messageFont, false, sectionImages, ref drawPos, defaultPos, highlightWords);
+                        DrawText(inFontBuffer.ToString(), messageFont, messagePaint, false, sectionImages, ref drawPos, defaultPos, highlightWords);
                         inFontBuffer.Clear();
                     }
 
@@ -1132,9 +1133,8 @@ namespace TwitchDownloaderCore
                 {
                     if (nonFontBuffer.Length > 0)
                     {
-                        using SKPaint fallbackFont = GetFallbackFont(nonFontBuffer[0]).Clone();
-                        fallbackFont.Color = renderOptions.MessageColor;
-                        DrawText(nonFontBuffer.ToString(), fallbackFont, false, sectionImages, ref drawPos, defaultPos, highlightWords);
+                        var fallbackFont = GetFallbackFont(nonFontBuffer[0]);
+                        DrawText(nonFontBuffer.ToString(), fallbackFont, messagePaint, false, sectionImages, ref drawPos, defaultPos, highlightWords);
                         nonFontBuffer.Clear();
                     }
 
@@ -1144,14 +1144,13 @@ namespace TwitchDownloaderCore
             // Only one or the other should occur
             if (nonFontBuffer.Length > 0)
             {
-                using SKPaint fallbackFont = GetFallbackFont(nonFontBuffer[0]).Clone();
-                fallbackFont.Color = renderOptions.MessageColor;
-                DrawText(nonFontBuffer.ToString(), fallbackFont, true, sectionImages, ref drawPos, defaultPos, highlightWords);
+                var fallbackFont = GetFallbackFont(nonFontBuffer[0]);
+                DrawText(nonFontBuffer.ToString(), fallbackFont, messagePaint, true, sectionImages, ref drawPos, defaultPos, highlightWords);
                 nonFontBuffer.Clear();
             }
             if (inFontBuffer.Length > 0)
             {
-                DrawText(inFontBuffer.ToString(), messageFont, true, sectionImages, ref drawPos, defaultPos, highlightWords);
+                DrawText(inFontBuffer.ToString(), messageFont, messagePaint, true, sectionImages, ref drawPos, defaultPos, highlightWords);
                 inFontBuffer.Clear();
             }
         }
@@ -1184,7 +1183,7 @@ namespace TwitchDownloaderCore
             }
             if (!bitsPrinted)
             {
-                DrawText(fragmentString, messageFont, true, sectionImages, ref drawPos, defaultPos, highlightWords);
+                DrawText(fragmentString, messageFont, messagePaint, true, sectionImages, ref drawPos, defaultPos, highlightWords);
             }
 
             static bool TryGetCheerEmote(List<CheerEmote> cheerEmoteList, ReadOnlySpan<char> prefix, [NotNullWhen(true)] out CheerEmote cheerEmote)
@@ -1237,7 +1236,8 @@ namespace TwitchDownloaderCore
                 if (highlightWords)
                 {
                     using var canvas = new SKCanvas(sectionImages.Last().bitmap);
-                    canvas.DrawRect(drawPos.X, 0, emoteInfo.Width + renderOptions.EmoteSpacing, renderOptions.SectionHeight, new SKPaint() { Color = Purple });
+                    using var paint = new SKPaint { Color = Purple };
+                    canvas.DrawRect(drawPos.X, 0, emoteInfo.Width + renderOptions.EmoteSpacing, renderOptions.SectionHeight, paint);
                 }
 
                 emotePositionList.Add((emotePoint, emote));
@@ -1246,7 +1246,7 @@ namespace TwitchDownloaderCore
             else
             {
                 // Probably an old emote that was removed
-                DrawText(fragment.text, messageFont, true, sectionImages, ref drawPos, defaultPos, highlightWords);
+                DrawText(fragment.text, messageFont, messagePaint, true, sectionImages, ref drawPos, defaultPos, highlightWords);
             }
 
             static bool TryGetTwitchEmote(List<TwitchEmote> twitchEmoteList, ReadOnlySpan<char> emoteId, [NotNullWhen(true)] out TwitchEmote twitchEmote)
@@ -1280,15 +1280,15 @@ namespace TwitchDownloaderCore
             }
         }
 
-        private void DrawText(string drawText, SKPaint textFont, bool padding, List<(SKImageInfo info, SKBitmap bitmap)> sectionImages, ref Point drawPos, Point defaultPos, bool highlightWords, bool noWrap = false)
+        private void DrawText(string drawText, SKFont textFont, SKPaint textPaint, bool padding, List<(SKImageInfo info, SKBitmap bitmap)> sectionImages, ref Point drawPos, Point defaultPos, bool highlightWords, bool noWrap = false)
         {
             bool isRtl = IsRightToLeft(drawText);
-            float textWidth = MeasureText(drawText, textFont, isRtl);
+            float textWidth = MeasureText(drawText, textFont, textPaint, isRtl);
             int effectiveChatWidth = renderOptions.ChatWidth - renderOptions.SidePadding - defaultPos.X;
 
             while (!noWrap && textWidth > effectiveChatWidth)
             {
-                string newDrawText = SubstringToTextWidth(drawText, textFont, effectiveChatWidth, isRtl, "?-").ToString();
+                string newDrawText = SubstringToTextWidth(drawText, textFont, textPaint, effectiveChatWidth, isRtl, "?-").ToString();
                 var overrideWrap = false;
 
                 if (newDrawText.Length == 0)
@@ -1298,10 +1298,10 @@ namespace TwitchDownloaderCore
                     newDrawText = drawText[..1];
                 }
 
-                DrawText(newDrawText, textFont, padding, sectionImages, ref drawPos, defaultPos, highlightWords, overrideWrap);
+                DrawText(newDrawText, textFont, textPaint, padding, sectionImages, ref drawPos, defaultPos, highlightWords, overrideWrap);
 
                 drawText = drawText[newDrawText.Length..];
-                textWidth = MeasureText(drawText, textFont, isRtl);
+                textWidth = MeasureText(drawText, textFont, textPaint, isRtl);
             }
             if (drawPos.X + textWidth > renderOptions.ChatWidth - renderOptions.SidePadding * 2)
             {
@@ -1320,18 +1320,18 @@ namespace TwitchDownloaderCore
                 {
                     using var outlinePath = isRtl
                         ? textFont.GetShapedTextPath(drawText, drawPos.X, drawPos.Y)
-                        : textFont.GetTextPath(drawText, drawPos.X, drawPos.Y);
+                        : textFont.GetTextPath(drawText, drawPos);
 
                     sectionImageCanvas.DrawPath(outlinePath, outlinePaint);
                 }
 
                 if (RtlRegex.IsMatch(drawText))
                 {
-                    sectionImageCanvas.DrawShapedText(drawText, drawPos.X, drawPos.Y, textFont);
+                    sectionImageCanvas.DrawShapedText(drawText, drawPos.X, drawPos.Y, textFont, textPaint);
                 }
                 else
                 {
-                    sectionImageCanvas.DrawText(drawText, drawPos.X, drawPos.Y, textFont);
+                    sectionImageCanvas.DrawText(drawText, drawPos.X, drawPos.Y, textFont, textPaint);
                 }
             }
 
@@ -1342,12 +1342,12 @@ namespace TwitchDownloaderCore
         /// Produces a <see langword="string"/> less than or equal to <paramref name="maxWidth"/> when drawn with <paramref name="textFont"/> OR substringed to the last index of any character in <paramref name="delimiters"/>.
         /// </summary>
         /// <returns>A shortened in visual width or delimited <see langword="string"/>, whichever comes first.</returns>
-        private static ReadOnlySpan<char> SubstringToTextWidth(ReadOnlySpan<char> text, SKPaint textFont, int maxWidth, bool isRtl, ReadOnlySpan<char> delimiters)
+        private static ReadOnlySpan<char> SubstringToTextWidth(ReadOnlySpan<char> text, SKFont textFont, SKPaint textPaint, int maxWidth, bool isRtl, ReadOnlySpan<char> delimiters)
         {
             // If we are dealing with non-RTL and don't have any delimiters then SKPaint.BreakText is over 9x faster
             if (!isRtl && text.IndexOfAny(delimiters) == -1)
             {
-                return SubstringToTextWidth(text, textFont, maxWidth);
+                return SubstringToTextWidth(text, textFont, textPaint, maxWidth);
             }
 
             using var shaper = isRtl
@@ -1355,7 +1355,7 @@ namespace TwitchDownloaderCore
                 : null;
 
             // Input text was already less than max width
-            if (MeasureText(text, textFont, isRtl, shaper) <= maxWidth)
+            if (MeasureText(text, textFont, textPaint, isRtl, shaper) <= maxWidth)
             {
                 return text;
             }
@@ -1366,13 +1366,13 @@ namespace TwitchDownloaderCore
             {
                 length /= 2;
             }
-            while (MeasureText(text[..length], textFont, isRtl, shaper) > maxWidth);
+            while (MeasureText(text[..length], textFont, textPaint, isRtl, shaper) > maxWidth);
 
             // Add chars until greater than width, then remove the last
             do
             {
                 length++;
-            } while (MeasureText(text[..length], textFont, isRtl, shaper) < maxWidth);
+            } while (MeasureText(text[..length], textFont, textPaint, isRtl, shaper) < maxWidth);
             text = text[..(length - 1)];
 
             // Cut at the last delimiter character if applicable
@@ -1390,19 +1390,19 @@ namespace TwitchDownloaderCore
         /// </summary>
         /// <returns>A shortened in visual width <see cref="ReadOnlySpan{T}"/>.</returns>
         /// <remarks>This is not compatible with text that needs to be shaped.</remarks>
-        private static ReadOnlySpan<char> SubstringToTextWidth(ReadOnlySpan<char> text, SKPaint textFont, int maxWidth)
+        private static ReadOnlySpan<char> SubstringToTextWidth(ReadOnlySpan<char> text, SKFont textFont, SKPaint textPaint, int maxWidth)
         {
-            var length = (int)textFont.BreakText(text, maxWidth);
+            var length = textFont.BreakText(text, maxWidth, textPaint);
             return text[..length];
         }
 
-        private static float MeasureText(ReadOnlySpan<char> text, SKPaint textFont, bool? isRtl = null, SKShaper shaper = null)
+        private static float MeasureText(ReadOnlySpan<char> text, SKFont textFont, SKPaint textPaint, bool? isRtl = null, SKShaper shaper = null)
         {
             isRtl ??= IsRightToLeft(text);
 
             if (isRtl == false)
             {
-                return textFont.MeasureText(text);
+                return textFont.MeasureText(text, textPaint);
             }
 
             if (shaper == null)
@@ -1413,16 +1413,16 @@ namespace TwitchDownloaderCore
             return MeasureRtlText(text, textFont, shaper);
         }
 
-        private static float MeasureRtlText(ReadOnlySpan<char> rtlText, SKPaint textFont)
+        private static float MeasureRtlText(ReadOnlySpan<char> rtlText, SKFont textFont)
         {
             using var shaper = new SKShaper(textFont.Typeface);
             return MeasureRtlText(rtlText, textFont, shaper);
         }
 
-        private static float MeasureRtlText(ReadOnlySpan<char> rtlText, SKPaint textFont, SKShaper shaper)
+        private static float MeasureRtlText(ReadOnlySpan<char> rtlText, SKFont textFont, SKShaper shaper)
         {
             using var buffer = new HarfBuzzSharp.Buffer();
-            buffer.Add(rtlText, textFont.TextEncoding);
+            buffer.Add(rtlText, SKTextEncoding.Utf16);
             SKShaper.Result measure = shaper.Shape(buffer, textFont);
             return measure.Width;
         }
@@ -1440,16 +1440,18 @@ namespace TwitchDownloaderCore
                 userColor = AdjustUsernameVisibility(userColor, backgroundColor);
             }
 
-            using SKPaint userPaint = comment.commenter.display_name.Any(IsNotAscii)
-                ? GetFallbackFont(comment.commenter.display_name.First(IsNotAscii)).Clone()
-                : nameFont.Clone();
+            var userFont = comment.commenter.display_name.Any(IsNotAscii)
+                ? GetFallbackFont(comment.commenter.display_name.First(IsNotAscii))
+                : nameFont;
 
+            using var userPaint = namePaint.Clone();
             userPaint.Color = userColor;
+
             var userName = appendColon
                 ? comment.commenter.display_name + ":"
                 : comment.commenter.display_name;
 
-            DrawText(userName, userPaint, true, sectionImages, ref drawPos, defaultPos, false);
+            DrawText(userName, userFont, userPaint, true, sectionImages, ref drawPos, defaultPos, false);
         }
 
         private SKColor AdjustUsernameVisibility(SKColor userColor, SKColor backgroundColor)
@@ -1624,11 +1626,11 @@ namespace TwitchDownloaderCore
 
             if (renderOptions.Outline)
             {
-                using var outlinePath = messageFont.GetTextPath(formattedTimestamp, drawPos.X, drawPos.Y);
+                using var outlinePath = messageFont.GetTextPath(formattedTimestamp, drawPos);
                 sectionImageCanvas.DrawPath(outlinePath, outlinePaint);
             }
 
-            sectionImageCanvas.DrawText(formattedTimestamp, drawPos.X, drawPos.Y, messageFont);
+            sectionImageCanvas.DrawText(formattedTimestamp, drawPos.X, drawPos.Y, messageFont, messagePaint);
 
             // We use pre-defined widths so all timestamps have the same defaultPos regardless of individual character width
             var textWidth = timestamp.Ticks switch
@@ -1783,7 +1785,7 @@ namespace TwitchDownloaderCore
                 SKImageInfo oldEmojiInfo = bitmap.Info;
                 SKImageInfo imageInfo = new SKImageInfo((int)(oldEmojiInfo.Width * emojiScale), (int)(oldEmojiInfo.Height * emojiScale));
                 SKBitmap newBitmap = new SKBitmap(imageInfo);
-                bitmap.ScalePixels(newBitmap, SKFilterQuality.High);
+                bitmap.ScalePixels(newBitmap, new SKSamplingOptions(SKCubicResampler.Mitchell));
                 bitmap.Dispose();
                 newBitmap.SetImmutable();
                 emojis[emojiKey] = newBitmap;
@@ -1810,18 +1812,18 @@ namespace TwitchDownloaderCore
             }
         }
 
-        private SKPaint GetFallbackFont(int input)
+        private SKFont GetFallbackFont(int input)
         {
-            ref var fallbackPaint = ref CollectionsMarshal.GetValueRefOrAddDefault(fallbackFontCache, input, out bool alreadyExists);
+            ref var fallbackFont = ref CollectionsMarshal.GetValueRefOrAddDefault(fallbackFontCache, input, out var alreadyExists);
             if (alreadyExists)
             {
-                return fallbackPaint;
+                return fallbackFont;
             }
 
-            SKPaint newPaint = new SKPaint() { Typeface = fontManager.MatchCharacter(input), LcdRenderText = true, TextSize = (float)renderOptions.FontSize, IsAntialias = true, SubpixelText = true, IsAutohinted = true, HintingLevel = SKPaintHinting.Full, FilterQuality = SKFilterQuality.High };
-            if (newPaint.Typeface == null)
+            var typeface = fontManager.MatchCharacter(input);
+            if (typeface == null)
             {
-                newPaint.Typeface = SKTypeface.Default;
+                typeface = SKTypeface.Default;
                 if (!noFallbackFontFound)
                 {
                     noFallbackFontFound = true;
@@ -1829,8 +1831,8 @@ namespace TwitchDownloaderCore
                 }
             }
 
-            fallbackPaint = newPaint;
-            return newPaint;
+            fallbackFont = new SKFont { Typeface = typeface, Size = (float)renderOptions.FontSize, Edging = SKFontEdging.SubpixelAntialias, Subpixel = true, ForceAutoHinting = true, Hinting = SKFontHinting.Full };
+            return fallbackFont;
         }
 
         private static bool IsNotAscii(char input)
@@ -1916,7 +1918,9 @@ namespace TwitchDownloaderCore
                     foreach (var (_, paint) in fallbackFontCache)
                         paint?.Dispose();
                     fontManager?.Dispose();
+                    namePaint?.Dispose();
                     nameFont?.Dispose();
+                    messagePaint?.Dispose();
                     messageFont?.Dispose();
                     outlinePaint?.Dispose();
                     highlightIcons?.Dispose();

@@ -210,7 +210,7 @@ namespace TwitchDownloaderCore.Tools
             using var tempBitmap = SKBitmap.Decode(codec);
 
             var imageInfo = new SKImageInfo(finalIconSize, finalIconSize);
-            using var resizedBitmap = tempBitmap.Resize(imageInfo, SKFilterQuality.High);
+            using var resizedBitmap = tempBitmap.Resize(imageInfo, new SKSamplingOptions(SKCubicResampler.Mitchell));
 
             resizedBitmap.SetImmutable();
             return SKImage.FromBitmap(resizedBitmap);
@@ -233,7 +233,7 @@ namespace TwitchDownloaderCore.Tools
             tempCanvas.DrawPath(iconPath, iconPaint);
             var newSize = (int)FinalIconSize;
             var imageInfo = new SKImageInfo(newSize, newSize);
-            var resizedBitmap = tempBitmap.Resize(imageInfo, SKFilterQuality.High);
+            var resizedBitmap = tempBitmap.Resize(imageInfo, new SKSamplingOptions(SKCubicResampler.Mitchell));
 
             resizedBitmap.SetImmutable();
             return SKImage.FromBitmap(resizedBitmap);

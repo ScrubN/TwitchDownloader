@@ -106,7 +106,7 @@ namespace TwitchDownloaderCore.TwitchObjects
             {
                 SKImageInfo imageInfo = new SKImageInfo((int)(codecInfo.Width * newScale), (int)(codecInfo.Height * newScale));
                 SKBitmap newBitmap = new SKBitmap(imageInfo);
-                EmoteFrames[i].ScalePixels(newBitmap, SKFilterQuality.High);
+                EmoteFrames[i].ScalePixels(newBitmap, new SKSamplingOptions(SKCubicResampler.Mitchell));
                 EmoteFrames[i].Dispose();
                 newBitmap.SetImmutable();
                 EmoteFrames[i] = newBitmap;

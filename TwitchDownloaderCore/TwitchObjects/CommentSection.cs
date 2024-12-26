@@ -10,9 +10,9 @@ namespace TwitchDownloaderCore.TwitchObjects
         public int CommentIndex { get; set; }
     }
 
-    public struct Point
+    public record struct Point(int X, int Y)
     {
-        public int X { get; set; }
-        public int Y { get; set; }
+        public static implicit operator SKPoint(Point p) => new(p.X, p.Y);
+        public static explicit operator Point(SKPoint p) => new((int)p.X, (int)p.Y);
     }
 }

@@ -6,17 +6,17 @@ namespace TwitchDownloaderCore.Extensions
     // ReSharper disable once InconsistentNaming
     public static class SKCanvasExtensions
     {
-        public static void DrawText(this SKCanvas canvas, ReadOnlySpan<char> text, float x, float y, SKPaint paint)
+        public static void DrawText(this SKCanvas canvas, ReadOnlySpan<char> text, float x, float y, SKFont font, SKPaint paint, SKTextAlign textAlign = SKTextAlign.Left)
         {
-            if (paint.TextAlign != SKTextAlign.Left)
+            if (textAlign != SKTextAlign.Left)
             {
-                var num = paint.MeasureText(text);
-                if (paint.TextAlign == SKTextAlign.Center)
+                var num = font.MeasureText(text, paint);
+                if (textAlign == SKTextAlign.Center)
                     num *= 0.5f;
                 x -= num;
             }
 
-            using var text1 = SKTextBlob.Create(text, paint.AsFont());
+            using var text1 = SKTextBlob.Create(text, font);
             if (text1 == null)
                 return;
 

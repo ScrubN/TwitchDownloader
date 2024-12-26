@@ -78,7 +78,7 @@ namespace TwitchDownloaderCore.TwitchObjects
             {
                 SKImageInfo imageInfo = new SKImageInfo((int)(bitmap.Width * newScale), (int)(bitmap.Height * newScale));
                 SKBitmap newBitmap = new SKBitmap(imageInfo);
-                bitmap.ScalePixels(newBitmap, SKFilterQuality.High);
+                bitmap.ScalePixels(newBitmap, new SKSamplingOptions(SKCubicResampler.Mitchell));
                 bitmap.Dispose();
                 newBitmap.SetImmutable();
                 Versions[versionName] = newBitmap;
