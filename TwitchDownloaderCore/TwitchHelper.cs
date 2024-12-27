@@ -304,29 +304,20 @@ namespace TwitchDownloaderCore
             foreach (var stvEmote in stvEmotes)
             {
                 STVData emoteData = stvEmote.data;
-                STVHost emoteHost = emoteData.host;
-                List<STVFile> emoteFiles = emoteHost.files;
-                if (emoteFiles.Count == 0) // Sometimes there are no hosted files for the emote
+                if (emoteData.host.files.Count == 0) // Sometimes there are no hosted files for the emote
                 {
                     logger.LogVerbose($"{stvEmote.name} has no hosted files, skipping.");
                     continue;
                 }
 
-                // TODO: Allow and prefer avif when SkiaSharp properly supports it
-                string emoteFormat = "";
-                foreach (var fileItem in emoteFiles)
+                string emoteFormat;
+                var emoteFormats = emoteData.host.files.Select(x => x.format).ToArray();
+                if ((emoteFormat = emoteFormats.FirstOrDefault(x => x.Equals("avif", StringComparison.OrdinalIgnoreCase))) == null)
                 {
-                    if (fileItem.format.Equals("webp", StringComparison.OrdinalIgnoreCase)) // Is the emote offered in webp?
+                    if ((emoteFormat = emoteFormats.FirstOrDefault(x => x.Equals("webp", StringComparison.OrdinalIgnoreCase))) == null)
                     {
-                        emoteFormat = "webp";
-                        break;
+                        logger.LogVerbose($"{stvEmote.name} is not available in WebP or AVIF, skipping. Available formats: {string.Join(", ", emoteFormats)}.");
                     }
-                }
-
-                if (emoteFormat is "") // SkiaSharp does not yet properly support avif, only allow webp - see issue lay295#426
-                {
-                    logger.LogVerbose($"{stvEmote.name} is not available in webp, skipping. Available formats: {string.Join(", ", emoteFiles.Select(x => x.format))}");
-                    continue;
                 }
 
                 var emoteFlags = emoteData.flags;
@@ -336,7 +327,7 @@ namespace TwitchDownloaderCore
                     continue;
                 }
 
-                var emoteUrl = $"https:{emoteHost.url}/[scale]x.{emoteFormat}";
+                var emoteUrl = $"https:{emoteData.host.url}/[scale]x.{emoteFormat}";
                 var emoteResponse = new EmoteResponseItem { Id = stvEmote.id, Code = stvEmote.name, ImageType = emoteFormat, ImageUrl = emoteUrl };
                 if ((emoteFlags & StvEmoteFlags.ZeroWidth) != 0)
                 {
