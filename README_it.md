@@ -230,13 +230,13 @@ dotnet publish TwitchDownloaderCLI -p:PublishProfile=<Profile>
 5. a) Naviga nella cartella della GUI:
 
 ```
-cd TwitchDownloaderWPF/bin/Release/net6.0-windows/publish/win-x64
+cd TwitchDownloaderWPF/bin/Release/net8.0-windows/publish/win-x64
 ```
 
 5. b) Naviga nella cartella del CLI:
 
 ```
-cd TwitchDownloaderCLI/bin/Release/net6.0/publish
+cd TwitchDownloaderCLI/bin/Release/net8.0/publish
 ```
 
 # Crediti di Terze Parti

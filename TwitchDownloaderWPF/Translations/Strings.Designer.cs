@@ -852,15 +852,6 @@ namespace TwitchDownloaderWPF.Translations {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {fps} {height} {width} {max_int} {save_path}.
-        /// </summary>
-        public static string FfmpegParameters {
-            get {
-                return ResourceManager.GetString("FfmpegParameters", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Reset To Defaults.
         /// </summary>
         public static string FfmpegReset {
@@ -978,11 +969,209 @@ namespace TwitchDownloaderWPF.Translations {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {title} {id} {date} {channel} {date_custom=&quot;&quot;} {random_string} {trim_start} {trim_end} {trim_start_custom=&quot;&quot;} {trim_end_custom=&quot;&quot;} {length} {length_custom=&quot;&quot;} {views} {game}.
+        ///   Looks up a localized string similar to File Collision Behavior.
         /// </summary>
-        public static string FilenameTemplateParameters {
+        public static string FileCollisionBehavior {
             get {
-                return ResourceManager.GetString("FilenameTemplateParameters", resourceCulture);
+                return ResourceManager.GetString("FileCollisionBehavior", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ask.
+        /// </summary>
+        public static string FileCollisionBehaviorAsk {
+            get {
+                return ResourceManager.GetString("FileCollisionBehaviorAsk", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cancel.
+        /// </summary>
+        public static string FileCollisionBehaviorCancel {
+            get {
+                return ResourceManager.GetString("FileCollisionBehaviorCancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Overwrite.
+        /// </summary>
+        public static string FileCollisionBehaviorOverwrite {
+            get {
+                return ResourceManager.GetString("FileCollisionBehaviorOverwrite", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rename.
+        /// </summary>
+        public static string FileCollisionBehaviorRename {
+            get {
+                return ResourceManager.GetString("FileCollisionBehaviorRename", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The default handling for file collisions in the task queue. If a choice has already been remembered for the current session, an application restart will be required to override it..
+        /// </summary>
+        public static string FileCollisionBehaviorTooltip {
+            get {
+                return ResourceManager.GetString("FileCollisionBehaviorTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The ID of the channel which owns the video/clip/chat..
+        /// </summary>
+        public static string FilenameParameterChannelIdTooltip {
+            get {
+                return ResourceManager.GetString("FilenameParameterChannelIdTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The display name of the channel which owns the video/clip/chat..
+        /// </summary>
+        public static string FilenameParameterChannelTooltip {
+            get {
+                return ResourceManager.GetString("FilenameParameterChannelTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The ID of the channel which created the clip, or empty for videos..
+        /// </summary>
+        public static string FilenameParameterClipperIdTooltip {
+            get {
+                return ResourceManager.GetString("FilenameParameterClipperIdTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The display name of the channel which created the clip, or empty for videos..
+        /// </summary>
+        public static string FilenameParameterClipperTooltip {
+            get {
+                return ResourceManager.GetString("FilenameParameterClipperTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The date that the video/clip was created in a customizable format..
+        /// </summary>
+        public static string FilenameParameterDateCustomTooltip {
+            get {
+                return ResourceManager.GetString("FilenameParameterDateCustomTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The date that the video/clip was created in the format M-d-yy..
+        /// </summary>
+        public static string FilenameParameterDateTooltip {
+            get {
+                return ResourceManager.GetString("FilenameParameterDateTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The display name of the primary game/category in the video/clip/chat..
+        /// </summary>
+        public static string FilenameParameterGameTooltip {
+            get {
+                return ResourceManager.GetString("FilenameParameterGameTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The ID of the video/clip..
+        /// </summary>
+        public static string FilenameParameterIdTooltip {
+            get {
+                return ResourceManager.GetString("FilenameParameterIdTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The length (including trim) of the video/clip/chat in a customizable format..
+        /// </summary>
+        public static string FilenameParameterLengthCustomTooltip {
+            get {
+                return ResourceManager.GetString("FilenameParameterLengthCustomTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The length (including trim) of the video/clip/chat in the format hh-mm-ss..
+        /// </summary>
+        public static string FilenameParameterLengthTooltip {
+            get {
+                return ResourceManager.GetString("FilenameParameterLengthTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A string of 11 random characters..
+        /// </summary>
+        public static string FilenameParameterRandomStringTooltip {
+            get {
+                return ResourceManager.GetString("FilenameParameterRandomStringTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The title of the video/clip..
+        /// </summary>
+        public static string FilenameParameterTitleTooltip {
+            get {
+                return ResourceManager.GetString("FilenameParameterTitleTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The end trim of the video/chat in a customizable format..
+        /// </summary>
+        public static string FilenameParameterTrimEndCustomTooltip {
+            get {
+                return ResourceManager.GetString("FilenameParameterTrimEndCustomTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The end trim of the video/chat in the format hh-mm-ss..
+        /// </summary>
+        public static string FilenameParameterTrimEndTooltip {
+            get {
+                return ResourceManager.GetString("FilenameParameterTrimEndTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The start trim of the video/chat in a customizable format..
+        /// </summary>
+        public static string FilenameParameterTrimStartCustomTooltip {
+            get {
+                return ResourceManager.GetString("FilenameParameterTrimStartCustomTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The start trim of the video/chat in the format hh-mm-ss..
+        /// </summary>
+        public static string FilenameParameterTrimStartTooltip {
+            get {
+                return ResourceManager.GetString("FilenameParameterTrimStartTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The amount of views the video/clip has..
+        /// </summary>
+        public static string FilenameParameterViewsTooltip {
+            get {
+                return ResourceManager.GetString("FilenameParameterViewsTooltip", resourceCulture);
             }
         }
         
@@ -1131,6 +1320,15 @@ namespace TwitchDownloaderWPF.Translations {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The folder does not exist.
+        /// </summary>
+        public static string InvalidFolderPathMessage {
+            get {
+                return ResourceManager.GetString("InvalidFolderPathMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid start or end time.
         /// </summary>
         public static string InvalidStartEndTime {
@@ -1163,15 +1361,6 @@ namespace TwitchDownloaderWPF.Translations {
         public static string InvalidVideoLinkIdMessage {
             get {
                 return ResourceManager.GetString("InvalidVideoLinkIdMessage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The folder does not exist.
-        /// </summary>
-        public static string InvaliFolderPathMessage {
-            get {
-                return ResourceManager.GetString("InvaliFolderPathMessage", resourceCulture);
             }
         }
         
@@ -1851,6 +2040,15 @@ namespace TwitchDownloaderWPF.Translations {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Retry.
+        /// </summary>
+        public static string TaskRetry {
+            get {
+                return ResourceManager.GetString("TaskRetry", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Chats:.
         /// </summary>
         public static string TemplateChats {
@@ -1896,7 +2094,7 @@ namespace TwitchDownloaderWPF.Translations {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {theme} was not found. Reverting theme to System.
+        ///   Looks up a localized string similar to {0} was not found. Reverting theme to System.
         /// </summary>
         public static string ThemeNotFoundMessage {
             get {
@@ -2040,7 +2238,7 @@ namespace TwitchDownloaderWPF.Translations {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select Render Rage (Seconds).
+        ///   Looks up a localized string similar to Select Render Range (Seconds).
         /// </summary>
         public static string TitleRenderRange {
             get {
@@ -2171,6 +2369,42 @@ namespace TwitchDownloaderWPF.Translations {
         public static string UnableToFindThumbnail {
             get {
                 return ResourceManager.GetString("UnableToFindThumbnail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to Get Clips.
+        /// </summary>
+        public static string UnableToGetChannelClips {
+            get {
+                return ResourceManager.GetString("UnableToGetChannelClips", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to get channel clips: {0}.
+        /// </summary>
+        public static string UnableToGetChannelClipsMessage {
+            get {
+                return ResourceManager.GetString("UnableToGetChannelClipsMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to Get Videos.
+        /// </summary>
+        public static string UnableToGetChannelVideos {
+            get {
+                return ResourceManager.GetString("UnableToGetChannelVideos", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to get channel videos: {0}.
+        /// </summary>
+        public static string UnableToGetChannelVideosMessage {
+            get {
+                return ResourceManager.GetString("UnableToGetChannelVideosMessage", resourceCulture);
             }
         }
         
@@ -2378,6 +2612,42 @@ namespace TwitchDownloaderWPF.Translations {
         public static string VideoTitle {
             get {
                 return ResourceManager.GetString("VideoTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Trim Mode .
+        /// </summary>
+        public static string VideoTrimMode {
+            get {
+                return ResourceManager.GetString("VideoTrimMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exact.
+        /// </summary>
+        public static string VideoTrimModeExact {
+            get {
+                return ResourceManager.GetString("VideoTrimModeExact", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Safe.
+        /// </summary>
+        public static string VideoTrimModeSafe {
+            get {
+                return ResourceManager.GetString("VideoTrimModeSafe", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Videos trimmed with exact trim may rarely experience video/audio stuttering within the first/last few seconds. Safe trimming is guaranteed to not stutter but may result in a slightly longer video..
+        /// </summary>
+        public static string VideoTrimModeTooltip {
+            get {
+                return ResourceManager.GetString("VideoTrimModeTooltip", resourceCulture);
             }
         }
         

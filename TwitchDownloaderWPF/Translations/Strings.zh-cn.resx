@@ -124,7 +124,7 @@
     <value>添加至队列</value>
   </data>
   <data name="AlphaNotSupportedByCodec" xml:space="preserve">
-    <value>你为不支持透明度的容器 / 编解码器选择了 alpha 通道（透明度）。移除透明度或使用 MOV + RLE/PRORES 或 WEBM + VP8/VP9 编码</value>
+    <value>你为不支持透明度的容器 / 编解码器选择了 Alpha 通道（透明度）。移除透明度或使用 MOV + RLE/PRORES 或 WEBM + VP8/VP9 编码</value>
   </data>
   <data name="ApplicationTheme" xml:space="preserve">
     <value>主题 </value>
@@ -287,19 +287,11 @@
   <data name="FfmpegOutputArguments" xml:space="preserve">
     <value>输出参数：</value>
   </data>
-  <data name="FfmpegParameters" xml:space="preserve">
-    <value>{fps} {height} {width} {max_int} {save_path}</value>
-    <comment>Do not translate</comment>
-  </data>
   <data name="FfmpegReset" xml:space="preserve">
     <value>重置为默认值</value>
   </data>
   <data name="FfzEmotes" xml:space="preserve">
     <value>FFZ 表情（Emote）：</value>
-  </data>
-  <data name="FilenameTemplateParameters" xml:space="preserve">
-    <value>{title} {id} {date} {channel} {date_custom=""} {random_string} {trim_start} {trim_end} {trim_start_custom=""} {trim_end_custom=""} {length} {length_custom=""} {views} {game}</value>
-    <comment>Do not translate</comment>
   </data>
   <data name="FontColor" xml:space="preserve">
     <value>字体颜色：</value>
@@ -342,7 +334,7 @@
     <value>JSON 文件：</value>
   </data>
   <data name="Length" xml:space="preserve">
-    <value>长度：</value>
+    <value>时长：</value>
   </data>
   <data name="ListOfVodsClips" xml:space="preserve">
     <value>点播 / 剪辑列表（每行一个）</value>
@@ -574,7 +566,7 @@
     <value>视频过期或嵌入的 ID 损坏</value>
   </data>
   <data name="VodLinkId" xml:space="preserve">
-    <value>点播链接 / ID</value>
+    <value>点播链接 / ID：</value>
   </data>
   <data name="TemplateVods" xml:space="preserve">
     <value>点播：</value>
@@ -636,8 +628,7 @@
     <value>未找到主题</value>
   </data>
   <data name="ThemeNotFoundMessage" xml:space="preserve">
-    <value>未找到 {theme}。将主题还原为系统。</value>
-    <comment>Do not translate {theme}</comment>
+    <value>未找到 {0}。将主题还原为系统。</value>
   </data>
   <data name="MessageDispersion" xml:space="preserve">
     <value>散布 </value>
@@ -683,7 +674,7 @@
   <data name="InvalidFolderPath" xml:space="preserve">
     <value>文件夹路径无效</value>
   </data>
-  <data name="InvaliFolderPathMessage" xml:space="preserve">
+  <data name="InvalidFolderPathMessage" xml:space="preserve">
     <value>文件夹不存在</value>
   </data>
   <data name="StatusCanceled" xml:space="preserve">
@@ -706,7 +697,7 @@
     <value>本地</value>
   </data>
   <data name="SettingsTimeFormat" xml:space="preserve">
-    <value>时间格式</value>
+    <value>时间格式：</value>
   </data>
   <data name="NoJsonFilesSelected" xml:space="preserve">
     <value>未选择 JSON 文件</value>
@@ -727,7 +718,7 @@
     <value>无</value>
   </data>
   <data name="MaskWithNoAlpha" xml:space="preserve">
-    <value>你选择了生成不透明背景的遮罩。降低背景颜色 alpha 或禁用生成遮罩。</value>
+    <value>你选择了生成不透明背景的遮罩。降低背景颜色 Alpha 或禁用生成遮罩。</value>
   </data>
   <data name="OutlineScale" xml:space="preserve">
     <value>边框比例：</value>
@@ -742,7 +733,7 @@
     <value>发生未知错误</value>
   </data>
   <data name="TaskCouldNotBeRemoved" xml:space="preserve">
-    <value>此任务无法被移除</value>
+    <value>无法移除此任务</value>
   </data>
   <data name="CancelTaskBeforeRemoving" xml:space="preserve">
     <value>请取消任务或等待任务完成后再将其删除</value>
@@ -928,5 +919,101 @@
   </data>
   <data name="FileAlreadyExistsRememberMyChoice" xml:space="preserve">
     <value>记住我的选择</value>
+  </data>
+  <data name="VideoTrimMode" xml:space="preserve">
+    <value>修剪模式 </value><comment>Leave a trailing space</comment>
+  </data>
+  <data name="VideoTrimModeSafe" xml:space="preserve">
+    <value>安全</value>
+  </data>
+  <data name="VideoTrimModeExact" xml:space="preserve">
+    <value>精确</value>
+  </data>
+  <data name="VideoTrimModeTooltip" xml:space="preserve">
+    <value>使用精确模式修剪的视频在前几秒或最后几秒可能会出现视频 / 音频卡顿。安全模式保证不会出现卡顿，但可能会导致视频稍长。</value>
+  </data>
+  <data name="TaskRetry" xml:space="preserve">
+    <value>重试</value>
+  </data>
+  <data name="UnableToGetChannelVideos" xml:space="preserve">
+    <value>无法获取视频</value>
+  </data>
+  <data name="UnableToGetChannelVideosMessage" xml:space="preserve">
+    <value>无法获取频道视频：{0}</value>
+  </data>
+  <data name="UnableToGetChannelClips" xml:space="preserve">
+    <value>无法获取剪辑</value>
+  </data>
+  <data name="UnableToGetChannelClipsMessage" xml:space="preserve">
+    <value>无法获取频道剪辑：{0}</value>
+  </data>
+  <data name="FilenameParameterTitleTooltip" xml:space="preserve">
+    <value>视频 / 剪辑的标题。</value>
+  </data>
+  <data name="FilenameParameterIdTooltip" xml:space="preserve">
+    <value>视频 / 剪辑的 ID。</value>
+  </data>
+  <data name="FilenameParameterDateTooltip" xml:space="preserve">
+    <value>视频 / 剪辑的创建日期，格式为 M-d-yy。</value>
+  </data>
+  <data name="FilenameParameterDateCustomTooltip" xml:space="preserve">
+    <value>视频 / 剪辑的创建日期，格式为自定义格式。</value>
+  </data>
+  <data name="FilenameParameterChannelTooltip" xml:space="preserve">
+    <value>拥有此视频 / 剪辑 / 聊天的频道的显示名称。</value>
+  </data>
+  <data name="FilenameParameterRandomStringTooltip" xml:space="preserve">
+    <value>由 11 个随机字符组成的字符串。</value>
+  </data>
+  <data name="FilenameParameterTrimStartTooltip" xml:space="preserve">
+    <value>视频 / 聊天的修剪开始时间，格式为 hh-mm-ss。</value>
+  </data>
+  <data name="FilenameParameterTrimStartCustomTooltip" xml:space="preserve">
+    <value>视频 / 聊天的修剪开始时间，格式为自定义格式。</value>
+  </data>
+  <data name="FilenameParameterTrimEndTooltip" xml:space="preserve">
+    <value>视频 / 聊天的修剪结束时间，格式为 hh-mm-ss。</value>
+  </data>
+  <data name="FilenameParameterTrimEndCustomTooltip" xml:space="preserve">
+    <value>视频 / 聊天的修剪结束时间，格式为自定义格式。</value>
+  </data>
+  <data name="FilenameParameterLengthTooltip" xml:space="preserve">
+    <value>视频 / 剪辑 / 聊天的时长（包括修剪），格式为 hh-mm-ss。</value>
+  </data>
+  <data name="FilenameParameterLengthCustomTooltip" xml:space="preserve">
+    <value>视频 / 剪辑 / 聊天的时长（包括修剪），格式为自定义格式。</value>
+  </data>
+  <data name="FilenameParameterViewsTooltip" xml:space="preserve">
+    <value>视频 / 剪辑的观看次数。</value>
+  </data>
+  <data name="FilenameParameterGameTooltip" xml:space="preserve">
+    <value>视频 / 剪辑 / 聊天中主要游戏 / 分类的显示名称。</value>
+  </data>
+  <data name="FileCollisionBehavior" xml:space="preserve">
+    <value>文件冲突行为</value>
+  </data>
+  <data name="FileCollisionBehaviorTooltip" xml:space="preserve">
+    <value>任务队列中文件冲突的默认处理方式。如果当前会话中已经记住了选择，则需要重新启动应用程序才能覆盖它。</value>
+  </data>
+  <data name="FileCollisionBehaviorAsk" xml:space="preserve">
+    <value>询问</value>
+  </data>
+  <data name="FileCollisionBehaviorOverwrite" xml:space="preserve">
+    <value>覆盖</value>
+  </data>
+  <data name="FileCollisionBehaviorRename" xml:space="preserve">
+    <value>重新命名</value>
+  </data>
+  <data name="FileCollisionBehaviorCancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="FilenameParameterChannelIdTooltip" xml:space="preserve">
+    <value>拥有此视频 / 剪辑 / 聊天的频道的 ID。</value>
+  </data>
+  <data name="FilenameParameterClipperTooltip" xml:space="preserve">
+    <value>创建此剪辑的频道的显示名称，如果是视频则为空。</value>
+  </data>
+  <data name="FilenameParameterClipperIdTooltip" xml:space="preserve">
+    <value>创建此剪辑的频道的 ID，如果是视频则为空。</value>
   </data>
 </root>

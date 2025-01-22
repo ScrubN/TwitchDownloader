@@ -1,6 +1,5 @@
 ﻿using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Threading;
@@ -11,6 +10,7 @@ using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using TwitchDownloaderCore;
 using TwitchDownloaderCore.Options;
+using TwitchDownloaderCore.Services;
 using TwitchDownloaderCore.Tools;
 using TwitchDownloaderCore.TwitchObjects.Gql;
 using TwitchDownloaderWPF.Models;
@@ -27,6 +27,9 @@ namespace TwitchDownloaderWPF
     public partial class PageClipDownload : Page
     {
         public string clipId = "";
+        public string streamerId;
+        public string clipperName;
+        public string clipperId;
         public DateTime currentVideoTime;
         public TimeSpan clipLength;
         public int viewCount;
@@ -72,6 +75,9 @@ namespace TwitchDownloaderWPF
 
                 clipLength = TimeSpan.FromSeconds(taskClipInfo.Result.data.clip.durationSeconds);
                 textStreamer.Text = clipData.data.clip.broadcaster?.displayName ?? Translations.Strings.UnknownUser;
+                streamerId = clipData.data.clip.broadcaster?.id;
+                clipperName = clipData.data.clip.curator?.displayName ?? Translations.Strings.UnknownUser;
+                clipperId = clipData.data.clip.curator?.id;
                 var clipCreatedAt = clipData.data.clip.createdAt;
                 textCreatedAt.Text = Settings.Default.UTCVideoTime ? clipCreatedAt.ToString(CultureInfo.CurrentCulture) : clipCreatedAt.ToLocalTime().ToString(CultureInfo.CurrentCulture);
                 currentVideoTime = Settings.Default.UTCVideoTime ? clipCreatedAt : clipCreatedAt.ToLocalTime();
@@ -114,7 +120,7 @@ namespace TwitchDownloaderWPF
 
         private static string ValidateUrl(string text)
         {
-            var clipIdMatch = TwitchRegex.MatchClipId(text);
+            var clipIdMatch = IdParse.MatchClipId(text);
             return clipIdMatch is { Success: true }
                 ? clipIdMatch.Value
                 : null;
@@ -202,7 +208,8 @@ namespace TwitchDownloaderWPF
             SaveFileDialog saveFileDialog = new SaveFileDialog
             {
                 Filter = "MP4 Files | *.mp4",
-                FileName = FilenameService.GetFilename(Settings.Default.TemplateClip, textTitle.Text, clipId, currentVideoTime, textStreamer.Text, TimeSpan.Zero, clipLength, viewCount, game) + ".mp4"
+                FileName = FilenameService.GetFilename(Settings.Default.TemplateClip, textTitle.Text, clipId, currentVideoTime, textStreamer.Text, streamerId, TimeSpan.Zero, clipLength, viewCount, game, clipperName,
+                    clipperId) + ".mp4"
             };
             if (saveFileDialog.ShowDialog() != true)
             {
@@ -266,6 +273,7 @@ namespace TwitchDownloaderWPF
         private void BtnCancel_Click(object sender, RoutedEventArgs e)
         {
             statusMessage.Text = Translations.Strings.StatusCanceling;
+            SetImage("Images/ppStretch.gif", true);
             try
             {
                 _cancellationTokenSource.Cancel();

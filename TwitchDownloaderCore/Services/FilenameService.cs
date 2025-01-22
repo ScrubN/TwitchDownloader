@@ -1,11 +1,13 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using TwitchDownloaderCore.Extensions;
+using TwitchDownloaderCore.Tools;
 
-namespace TwitchDownloaderCore.Tools
+namespace TwitchDownloaderCore.Services
 {
     public static partial class FilenameService
     {
@@ -21,7 +23,8 @@ namespace TwitchDownloaderCore.Tools
         [GeneratedRegex("{length_custom=\"(.*?)\"}")]
         private static partial Regex LengthCustomRegex();
 
-        public static string GetFilename(string template, string title, string id, DateTime date, string channel, TimeSpan trimStart, TimeSpan trimEnd, long viewCount, string game)
+        public static string GetFilename(string template, [AllowNull] string title, [AllowNull] string id, DateTime date, [AllowNull] string channel, [AllowNull] string channelId, TimeSpan trimStart, TimeSpan trimEnd, long viewCount,
+            [AllowNull] string game, [AllowNull] string clipper = null, [AllowNull] string clipperId = null)
         {
             var videoLength = trimEnd - trimStart;
 
@@ -29,6 +32,9 @@ namespace TwitchDownloaderCore.Tools
                 .Replace("{title}", ReplaceInvalidFilenameChars(title))
                 .Replace("{id}", ReplaceInvalidFilenameChars(id))
                 .Replace("{channel}", ReplaceInvalidFilenameChars(channel))
+                .Replace("{channel_id}", ReplaceInvalidFilenameChars(channelId))
+                .Replace("{clipper}", ReplaceInvalidFilenameChars(clipper))
+                .Replace("{clipper_id}", ReplaceInvalidFilenameChars(clipperId))
                 .Replace("{date}", date.ToString("M-d-yy"))
                 .Replace("{random_string}", Path.GetRandomFileName().Remove(8)) // Remove the period
                 .Replace("{trim_start}", TimeSpanHFormat.ReusableInstance.Format(@"HH\-mm\-ss", trimStart))
@@ -44,17 +50,17 @@ namespace TwitchDownloaderCore.Tools
 
             if (template.Contains("{trim_start_custom="))
             {
-                ReplaceCustomWithFormattable(stringBuilder, TrimStartCustomRegex(), trimStart);
+                ReplaceCustomWithFormattable(stringBuilder, TrimStartCustomRegex(), trimStart, TimeSpanHFormat.ReusableInstance);
             }
 
             if (template.Contains("{trim_end_custom="))
             {
-                ReplaceCustomWithFormattable(stringBuilder, TrimEndCustomRegex(), trimEnd);
+                ReplaceCustomWithFormattable(stringBuilder, TrimEndCustomRegex(), trimEnd, TimeSpanHFormat.ReusableInstance);
             }
 
             if (template.Contains("{length_custom="))
             {
-                ReplaceCustomWithFormattable(stringBuilder, LengthCustomRegex(), videoLength);
+                ReplaceCustomWithFormattable(stringBuilder, LengthCustomRegex(), videoLength, TimeSpanHFormat.ReusableInstance);
             }
 
             var fileName = stringBuilder.ToString();
@@ -62,7 +68,7 @@ namespace TwitchDownloaderCore.Tools
             return Path.Combine(Path.Combine(additionalSubfolders), ReplaceInvalidFilenameChars(fileName));
         }
 
-        private static void ReplaceCustomWithFormattable(StringBuilder sb, Regex regex, IFormattable formattable, IFormatProvider formatProvider = null)
+        private static void ReplaceCustomWithFormattable<TFormattable>(StringBuilder sb, Regex regex, TFormattable formattable, [AllowNull] IFormatProvider formatProvider = null) where TFormattable : IFormattable
         {
             do
             {
@@ -72,8 +78,12 @@ namespace TwitchDownloaderCore.Tools
                     break;
 
                 var formatString = match.Groups[1].Value;
+                var formattedString = formatProvider?.GetFormat(typeof(ICustomFormatter)) is ICustomFormatter customFormatter
+                    ? customFormatter.Format(formatString, formattable, formatProvider)
+                    : formattable.ToString(formatString, formatProvider);
+
                 sb.Remove(match.Groups[0].Index, match.Groups[0].Length);
-                sb.Insert(match.Groups[0].Index, ReplaceInvalidFilenameChars(formattable.ToString(formatString, formatProvider)));
+                sb.Insert(match.Groups[0].Index, ReplaceInvalidFilenameChars(formattedString));
             } while (true);
         }
 
@@ -93,8 +103,14 @@ namespace TwitchDownloaderCore.Tools
 
         private static readonly char[] FilenameInvalidChars = Path.GetInvalidFileNameChars();
 
-        public static string ReplaceInvalidFilenameChars(string filename)
+        [return: NotNullIfNotNull(nameof(filename))]
+        public static string ReplaceInvalidFilenameChars([AllowNull] string filename)
         {
+            if (string.IsNullOrEmpty(filename))
+            {
+                return filename;
+            }
+
             const string TIMESTAMP_PATTERN = /*lang=regex*/ @"(?<=\d):(?=\d\d)";
             var newName = Regex.Replace(filename, TIMESTAMP_PATTERN, "_");
 
@@ -117,6 +133,29 @@ namespace TwitchDownloaderCore.Tools
 
             // In case there are additional invalid chars such as control codes
             return newName.ReplaceAny(FilenameInvalidChars, '_');
+        }
+
+        [return: MaybeNull]
+        public static string GuessVodFileExtension([AllowNull] string qualityString)
+        {
+            if (string.IsNullOrWhiteSpace(qualityString))
+            {
+                return ".mp4";
+            }
+
+            if (qualityString.Contains("audio", StringComparison.OrdinalIgnoreCase))
+            {
+                return ".m4a";
+            }
+
+            if (char.IsDigit(qualityString[0])
+                || qualityString.Contains("source", StringComparison.OrdinalIgnoreCase)
+                || qualityString.Contains("chunked", StringComparison.OrdinalIgnoreCase))
+            {
+                return ".mp4";
+            }
+
+            return null;
         }
 
         public static FileInfo GetNonCollidingName(FileInfo fileInfo)

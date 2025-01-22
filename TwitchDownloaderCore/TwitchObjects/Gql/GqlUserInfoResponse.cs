@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TwitchDownloaderCore.TwitchObjects.Gql
 {
@@ -20,6 +17,7 @@ namespace TwitchDownloaderCore.TwitchObjects.Gql
     public class User
     {
         public string id { get; set; }
+        public string displayName { get; set; }
         public string login { get; set; }
         public DateTime createdAt { get; set; }
         public DateTime updatedAt { get; set; }

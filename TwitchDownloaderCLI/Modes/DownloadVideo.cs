@@ -7,6 +7,7 @@ using TwitchDownloaderCLI.Tools;
 using TwitchDownloaderCore;
 using TwitchDownloaderCore.Interfaces;
 using TwitchDownloaderCore.Options;
+using TwitchDownloaderCore.Services;
 using TwitchDownloaderCore.Tools;
 
 namespace TwitchDownloaderCLI.Modes
@@ -19,7 +20,7 @@ namespace TwitchDownloaderCLI.Modes
 
             FfmpegHandler.DetectFfmpeg(inputOptions.FfmpegPath, progress);
 
-            var collisionHandler = new FileCollisionHandler(inputOptions);
+            var collisionHandler = new FileCollisionHandler(inputOptions, progress);
             var downloadOptions = GetDownloadOptions(inputOptions, collisionHandler, progress);
 
             var videoDownloader = new VideoDownloader(downloadOptions, progress);
@@ -34,7 +35,7 @@ namespace TwitchDownloaderCLI.Modes
                 Environment.Exit(1);
             }
 
-            var vodIdMatch = TwitchRegex.MatchVideoId(inputOptions.Id);
+            var vodIdMatch = IdParse.MatchVideoId(inputOptions.Id);
             if (vodIdMatch is not { Success: true })
             {
                 logger.LogError("Unable to parse Vod ID/URL.");
@@ -43,12 +44,7 @@ namespace TwitchDownloaderCLI.Modes
 
             if (!Path.HasExtension(inputOptions.OutputFile) && inputOptions.Quality is { Length: > 0 })
             {
-                if (inputOptions.Quality.Contains("audio", StringComparison.OrdinalIgnoreCase))
-                    inputOptions.OutputFile += ".m4a";
-                else if (char.IsDigit(inputOptions.Quality[0])
-                         || inputOptions.Quality.Contains("source", StringComparison.OrdinalIgnoreCase)
-                         || inputOptions.Quality.Contains("chunked", StringComparison.OrdinalIgnoreCase))
-                    inputOptions.OutputFile += ".mp4";
+                inputOptions.OutputFile += FilenameService.GuessVodFileExtension(inputOptions.Quality);
             }
 
             VideoDownloadOptions downloadOptions = new()
@@ -68,6 +64,7 @@ namespace TwitchDownloaderCLI.Modes
                 TrimBeginningTime = inputOptions.TrimBeginningTime,
                 TrimEnding = inputOptions.TrimEndingTime > TimeSpan.Zero,
                 TrimEndingTime = inputOptions.TrimEndingTime,
+                TrimMode = inputOptions.TrimMode,
                 FfmpegPath = string.IsNullOrWhiteSpace(inputOptions.FfmpegPath) ? FfmpegHandler.FfmpegExecutableName : Path.GetFullPath(inputOptions.FfmpegPath),
                 TempFolder = inputOptions.TempFolder,
                 CacheCleanerCallback = directoryInfos =>

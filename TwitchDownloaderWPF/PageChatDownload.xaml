@@ -84,29 +84,28 @@
                     <RadioButton x:Name="radioHTML" Content="HTML" Checked="radioHTML_Checked" Background="{DynamicResource AppElementBackground}" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}" />
                 </hc:ButtonGroup>
                 <StackPanel Visibility="Visible" x:Name="compressionOptions" Margin="5,8,0,0" Orientation="Horizontal">
-                    <RadioButton x:Name="radioCompressionNone" IsChecked="True" Content="{lex:Loc ChatCompressionNone}" Margin="3,0,0,0" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}" />
-                    <RadioButton x:Name="radioCompressionGzip" Content="{lex:Loc ChatCompressionGzip}" Margin="3,0,0,0" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}" />
+                    <RadioButton x:Name="radioCompressionNone" IsChecked="True" Content="{lex:Loc ChatCompressionNone}" Margin="3,0,0,0" Checked="RadioCompressionNone_OnCheckedChanged" Unchecked="RadioCompressionNone_OnCheckedChanged" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}" />
+                    <RadioButton x:Name="radioCompressionGzip" Content="{lex:Loc ChatCompressionGzip}" Margin="3,0,0,0" Checked="RadioCompressionGzip_OnCheckedChanged" Unchecked="RadioCompressionGzip_OnCheckedChanged" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}" />
                 </StackPanel>
                 <StackPanel Visibility="Collapsed" x:Name="timeOptions" Margin="5,8,0,0" Orientation="Horizontal">
-                    <RadioButton x:Name="radioTimestampUTC" IsChecked="True" Content="{lex:Loc TimestampUtc}" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}" />
-                    <RadioButton x:Name="radioTimestampRelative" Content="{lex:Loc TimestampRelative}" Margin="3,0,0,0" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}" />
-                    <RadioButton x:Name="radioTimestampNone" Content="{lex:Loc TimestampNone}" Margin="3,0,0,0" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}" />
+                    <RadioButton x:Name="radioTimestampUTC" IsChecked="True" Content="{lex:Loc TimestampUtc}" Checked="RadioTimestampUTC_OnCheckedChanged" Unchecked="RadioTimestampUTC_OnCheckedChanged" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}" />
+                    <RadioButton x:Name="radioTimestampRelative" Content="{lex:Loc TimestampRelative}" Margin="3,0,0,0" Checked="RadioTimestampRelative_OnCheckedChanged" Unchecked="RadioTimestampRelative_OnCheckedChanged" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}" />
+                    <RadioButton x:Name="radioTimestampNone" Content="{lex:Loc TimestampNone}" Margin="3,0,0,0" Checked="RadioTimestampNone_OnCheckedChanged" Unchecked="RadioTimestampNone_OnCheckedChanged" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}" />
                 </StackPanel>
                 <StackPanel Margin="5,5,0,0">
                     <StackPanel Orientation="Horizontal">
                         <CheckBox x:Name="CheckTrimStart" VerticalAlignment="Center" HorizontalAlignment="Left" Checked="CheckTrimStart_OnCheckStateChanged" Unchecked="CheckTrimStart_OnCheckStateChanged" BorderBrush="{DynamicResource AppElementBorder}" />
                         <TextBlock Margin="2,0,0,0" Text="{lex:Loc TrimStart}" VerticalAlignment="Center" Foreground="{DynamicResource AppText}" />
                         <hc:NumericUpDown Margin="3,-1,0,0" Minimum="0" Maximum="48" Value="0" x:Name="numStartHour" Background="{DynamicResource AppElementBackground}" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}" />
-                        <hc:NumericUpDown Margin="3,-1,0,0" Minimum="0" Maximum="60" Value="0" x:Name="numStartMinute" Background="{DynamicResource AppElementBackground}" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}" />
-                        <hc:NumericUpDown Margin="3,-1,0,0" Minimum="0" Maximum="60" Value="0" x:Name="numStartSecond" Background="{DynamicResource AppElementBackground}" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}" />
+                        <hc:NumericUpDown Margin="3,-1,0,0" Minimum="0" Maximum="59" Value="0" x:Name="numStartMinute" Background="{DynamicResource AppElementBackground}" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}" />
+                        <hc:NumericUpDown Margin="3,-1,0,0" Minimum="0" Maximum="59" Value="0" x:Name="numStartSecond" Background="{DynamicResource AppElementBackground}" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
                         <CheckBox x:Name="CheckTrimEnd" VerticalAlignment="Center" HorizontalAlignment="Left" Checked="CheckTrimEnd_OnCheckStateChanged" Unchecked="CheckTrimEnd_OnCheckStateChanged" BorderBrush="{DynamicResource AppElementBorder}" />
                         <TextBlock Margin="2,0,5,0" Text="{lex:Loc TrimEnd}" VerticalAlignment="Center" Foreground="{DynamicResource AppText}"/>
                         <hc:NumericUpDown Margin="3,-1,0,0" Minimum="0" Maximum="48" Value="0" x:Name="numEndHour" Background="{DynamicResource AppElementBackground}" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}" />
-                        <hc:NumericUpDown Margin="3,-1,0,0" Minimum="0" Maximum="60" Value="0" x:Name="numEndMinute" Background="{DynamicResource AppElementBackground}" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}" />
-                        <hc:NumericUpDown Margin="3,-1,0,0" Minimum="0" Maximum="60" Value="0" x:Name="numEndSecond" Background="{DynamicResource AppElementBackground}" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}" />
-
+                        <hc:NumericUpDown Margin="3,-1,0,0" Minimum="0" Maximum="59" Value="0" x:Name="numEndMinute" Background="{DynamicResource AppElementBackground}" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}" />
+                        <hc:NumericUpDown Margin="3,-1,0,0" Minimum="0" Maximum="59" Value="0" x:Name="numEndSecond" Background="{DynamicResource AppElementBackground}" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}" />
                     </StackPanel>
                 </StackPanel>
                 <StackPanel x:Name="stackEmbedChecks" Visibility="Visible">
@@ -138,7 +137,7 @@
             </StackPanel>
         </StackPanel>
         <StackPanel Grid.Column="4" Grid.Row="2" Grid.RowSpan="2">
-            <TextBlock Text="{lex:Loc Logheader}" Foreground="{DynamicResource AppText}" />
+            <TextBlock Text="{lex:Loc LogHeader}" Foreground="{DynamicResource AppText}" />
             <RichTextBox Margin="0,5" IsReadOnly="True" Name="textLog" Height="230" Background="{DynamicResource AppElementBackground}" BorderBrush="{DynamicResource AppElementBorder}" Foreground="{DynamicResource AppText}">
                 <RichTextBox.Resources>
                     <Style TargetType="{x:Type Paragraph}">

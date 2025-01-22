@@ -25,8 +25,8 @@ namespace TwitchDownloaderWPF
         public ObservableCollection<TaskData> videoList { get; set; } = new ObservableCollection<TaskData>();
         public readonly List<TaskData> selectedItems = new List<TaskData>();
         public readonly List<string> cursorList = new List<string>();
-        public int cursorIndex = -1;
-        public string currentChannel = "";
+        public int cursorIndex = 0;
+        public User currentChannel;
         public string period = "";
         public int videoCount = 50;
 
@@ -49,13 +49,40 @@ namespace TwitchDownloaderWPF
             await ChangeCurrentChannel();
         }
 
-        private Task ChangeCurrentChannel()
+        private void ResetLists()
         {
-            currentChannel = textChannel.Text;
             videoList.Clear();
             cursorList.Clear();
-            cursorIndex = -1;
-            return UpdateList();
+            cursorList.Add("");
+            cursorIndex = 0;
+        }
+
+        private async Task ChangeCurrentChannel()
+        {
+            var textTrimmed = textChannel.Text.Trim();
+            if (!textTrimmed.Equals(currentChannel?.login, StringComparison.InvariantCultureIgnoreCase))
+            {
+                currentChannel = null;
+                if (!string.IsNullOrEmpty(textTrimmed))
+                {
+                    try
+                    {
+                        var idRes = await TwitchHelper.GetUserIds(new[] { textTrimmed });
+                        var infoRes = await TwitchHelper.GetUserInfo(idRes.data.users.Select(x => x.id));
+                        currentChannel = infoRes.data.users[0];
+                    }
+                    catch (Exception ex)
+                    {
+                        if (Settings.Default.VerboseErrors)
+                        {
+                            MessageBox.Show(this, ex.ToString(), Translations.Strings.VerboseErrorOutput, MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    }
+                }
+            }
+
+            ResetLists();
+            await UpdateList();
         }
 
         private async Task UpdateList()
@@ -65,13 +92,11 @@ namespace TwitchDownloaderWPF
 
             StatusImage.Visibility = Visibility.Visible;
 
-            if (string.IsNullOrWhiteSpace(currentChannel))
+            if (string.IsNullOrWhiteSpace(currentChannel?.login))
             {
                 // Pretend we are doing something so the status icon has time to show
                 await Task.Delay(50);
-                videoList.Clear();
-                cursorList.Clear();
-                cursorIndex = -1;
+                ResetLists();
                 StatusImage.Visibility = Visibility.Hidden;
                 return;
             }
@@ -83,7 +108,24 @@ namespace TwitchDownloaderWPF
                 {
                     currentCursor = cursorList[cursorIndex];
                 }
-                GqlVideoSearchResponse res = await TwitchHelper.GetGqlVideos(currentChannel, currentCursor, videoCount);
+
+                GqlVideoSearchResponse res;
+                try
+                {
+                    res = await TwitchHelper.GetGqlVideos(currentChannel.login, currentCursor, videoCount);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(this, string.Format(Translations.Strings.UnableToGetChannelVideosMessage, ex.Message), Translations.Strings.UnableToGetChannelVideos, MessageBoxButton.OK, MessageBoxImage.Error);
+
+                    if (Settings.Default.VerboseErrors)
+                    {
+                        MessageBox.Show(this, ex.ToString(), Translations.Strings.VerboseErrorOutput, MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+
+                    return;
+                }
+
                 videoList.Clear();
                 if (res.data.user != null)
                 {
@@ -102,19 +144,25 @@ namespace TwitchDownloaderWPF
                             Id = video.node.id,
                             Time = Settings.Default.UTCVideoTime ? video.node.createdAt : video.node.createdAt.ToLocalTime(),
                             Views = video.node.viewCount,
-                            Streamer = currentChannel,
+                            StreamerName = currentChannel.displayName,
+                            StreamerId = currentChannel.id,
                             Game = video.node.game?.displayName ?? Translations.Strings.UnknownGame,
                             Thumbnail = thumbnail
                         });
                     }
 
-                    btnNext.IsEnabled = res.data.user.videos.pageInfo.hasNextPage;
-                    btnPrev.IsEnabled = res.data.user.videos.pageInfo.hasPreviousPage;
+                    btnPrev.IsEnabled = cursorIndex > 0;
                     if (res.data.user.videos.pageInfo.hasNextPage)
                     {
-                        string newCursor = res.data.user.videos.edges[0].cursor;
-                        if (!cursorList.Contains(newCursor))
-                            cursorList.Add(newCursor);
+                        string newCursor = res.data.user.videos.edges.FirstOrDefault()?.cursor;
+                        if (newCursor is not null)
+                        {
+                            btnNext.IsEnabled = true;
+                            if (!cursorList.Contains(newCursor))
+                            {
+                                cursorList.Add(newCursor);
+                            }
+                        }
                     }
                 }
             }
@@ -125,7 +173,24 @@ namespace TwitchDownloaderWPF
                 {
                     currentCursor = cursorList[cursorIndex];
                 }
-                GqlClipSearchResponse res = await TwitchHelper.GetGqlClips(currentChannel, period, currentCursor, videoCount);
+
+                GqlClipSearchResponse res;
+                try
+                {
+                    res = await TwitchHelper.GetGqlClips(currentChannel.login, period, currentCursor, videoCount);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(this, string.Format(Translations.Strings.UnableToGetChannelClipsMessage, ex.Message), Translations.Strings.UnableToGetChannelClips, MessageBoxButton.OK, MessageBoxImage.Error);
+
+                    if (Settings.Default.VerboseErrors)
+                    {
+                        MessageBox.Show(this, ex.ToString(), Translations.Strings.VerboseErrorOutput, MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+
+                    return;
+                }
+
                 videoList.Clear();
                 if (res.data.user != null)
                 {
@@ -144,19 +209,27 @@ namespace TwitchDownloaderWPF
                             Id = clip.node.slug,
                             Time = Settings.Default.UTCVideoTime ? clip.node.createdAt : clip.node.createdAt.ToLocalTime(),
                             Views = clip.node.viewCount,
-                            Streamer = currentChannel,
+                            StreamerName = currentChannel.displayName,
+                            StreamerId = currentChannel.id,
+                            ClipperName = clip.node.curator?.displayName ?? Translations.Strings.UnknownUser,
+                            ClipperId = clip.node.curator?.id,
                             Game = clip.node.game?.displayName ?? Translations.Strings.UnknownGame,
                             Thumbnail = thumbnail
                         });
                     }
 
-                    btnNext.IsEnabled = res.data.user.clips.pageInfo.hasNextPage;
-                    btnPrev.IsEnabled = cursorIndex >= 0;
+                    btnPrev.IsEnabled = cursorIndex > 0;
                     if (res.data.user.clips.pageInfo.hasNextPage)
                     {
-                        string newCursor = res.data.user.clips.edges.First(x => x.cursor != null).cursor;
-                        if (!cursorList.Contains(newCursor))
-                            cursorList.Add(newCursor);
+                        string newCursor = res.data.user.clips.edges.FirstOrDefault(x => x.cursor != null)?.cursor;
+                        if (newCursor is not null)
+                        {
+                            btnNext.IsEnabled = true;
+                            if (!cursorList.Contains(newCursor))
+                            {
+                                cursorList.Add(newCursor);
+                            }
+                        }
                     }
                 }
             }
@@ -186,7 +259,11 @@ namespace TwitchDownloaderWPF
         {
             btnNext.IsEnabled = false;
             btnPrev.IsEnabled = false;
-            cursorIndex++;
+            if (cursorIndex < cursorList.Count - 1)
+            {
+                cursorIndex++;
+            }
+
             await UpdateList();
         }
 
@@ -194,7 +271,11 @@ namespace TwitchDownloaderWPF
         {
             btnNext.IsEnabled = false;
             btnPrev.IsEnabled = false;
-            cursorIndex--;
+            if (cursorIndex > 0)
+            {
+                cursorIndex--;
+            }
+
             await UpdateList();
         }
 
@@ -226,9 +307,7 @@ namespace TwitchDownloaderWPF
         private async void ComboSortByDate_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             period = ((ComboBoxItem)ComboSortByDate.SelectedItem).Tag.ToString();
-            videoList.Clear();
-            cursorList.Clear();
-            cursorIndex = -1;
+            ResetLists();
             await UpdateList();
         }
 
@@ -278,9 +357,7 @@ namespace TwitchDownloaderWPF
         private async void ComboVideoCount_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             videoCount = int.Parse((string)((ComboBoxItem)ComboVideoCount.SelectedValue).Content);
-            videoList.Clear();
-            cursorList.Clear();
-            cursorIndex = -1;
+            ResetLists();
             await UpdateList();
         }
 

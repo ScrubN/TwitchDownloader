@@ -90,6 +90,7 @@ namespace TwitchDownloaderCore.Tests.ToolTests
         [InlineData(
             "{\"body\":\"viewer8 is gifting 5 Tier 1 Subs to streamer8's community! They've gifted a total of 349 in the channel! \",\"bits_spent\":0,\"fragments\":[{\"text\":\"viewer8 is gifting 5 Tier 1 Subs to streamer8's community! They've gifted a total of 349 in the channel! \",\"emoticon\":null}],\"user_badges\":[{\"_id\":\"subscriber\",\"version\":\"6\"},{\"_id\":\"bits\",\"version\":\"50000\"}],\"user_color\":\"#DAA520\",\"emoticons\":[]}",
             HighlightType.GiftedMany)]
+        // +Special case in separate method.
         // GiftedSingle
         [InlineData(
             "{\"body\":\"viewer8 gifted a Tier 1 sub to viewer9! \",\"bits_spent\":0,\"fragments\":[{\"text\":\"viewer8 gifted a Tier 1 sub to viewer9! \",\"emoticon\":null}],\"user_badges\":[{\"_id\":\"subscriber\",\"version\":\"6\"},{\"_id\":\"bits\",\"version\":\"50000\"}],\"user_color\":\"#DAA520\",\"emoticons\":[]}",
@@ -98,8 +99,12 @@ namespace TwitchDownloaderCore.Tests.ToolTests
         // Special case, in separate method.
         // ContinuingGift
         [InlineData(
-            "{\"body\":\"viewer8 is continuing the Gift Sub they got from an anonymous user! \",\"bits_spent\":0,\"fragments\":[{\"text\":\"viewer8 is continuing the Gift Sub they got from an anonymous user! \",\"emoticon\":null}],\"user_badges\":[{\"_id\":\"subscriber\",\"version\":\"0\"}],\"user_color\":\"#8A2BE2\",\"emoticons\":[]}",
+            "{\"body\":\"viewer8 is continuing the Gift Sub they got from viewer9! \",\"bits_spent\":0,\"fragments\":[{\"text\":\"viewer8 is continuing the Gift Sub they got from viewer9! \",\"emoticon\":null}],\"user_badges\":[{\"_id\":\"subscriber\",\"version\":\"0\"}],\"user_color\":\"#8A2BE2\",\"emoticons\":[]}",
             HighlightType.ContinuingGift)]
+        // ContinuingAnonymousGift
+        [InlineData(
+            "{\"body\":\"viewer8 is continuing the Gift Sub they got from an anonymous user! \",\"bits_spent\":0,\"fragments\":[{\"text\":\"viewer8 is continuing the Gift Sub they got from an anonymous user! \",\"emoticon\":null}],\"user_badges\":[{\"_id\":\"subscriber\",\"version\":\"0\"}],\"user_color\":\"#8A2BE2\",\"emoticons\":[]}",
+            HighlightType.ContinuingAnonymousGift)]
         // PayingForward
         [InlineData(
             "{\"body\":\"viewer8 is paying forward the Gift they got from an anonymous gifter to the community! \",\"bits_spent\":0,\"fragments\":[{\"text\":\"viewer8 is paying forward the Gift they got from an anonymous gifter to the community! \",\"emoticon\":null}],\"user_badges\":[{\"_id\":\"subscriber\",\"version\":\"0\"},{\"_id\":\"bits\",\"version\":\"100\"}],\"user_color\":null,\"emoticons\":[]}",
@@ -149,17 +154,39 @@ namespace TwitchDownloaderCore.Tests.ToolTests
             Assert.Equal(expectedType, actualType);
         }
 
-        [Fact]
-        public void CorrectlyIdentifiesAnonymousGiftSub()
+        [Theory]
+        [InlineData("{\"display_name\":\"Twitch\",\"_id\":\"12826\",\"name\":\"twitch\",\"bio\":\"Twitch is where thousands of communities come together for whatever, every day. \",\"created_at\":\"2007-05-22T10:39:54.238271Z\",\"updated_at\":\"2024-09-22T22:28:39.594659Z\",\"logo\":\"https://static-cdn.jtvnw.net/jtv_user_pictures/aa88230d-7af5-4053-a7cd-889e626d3382-profile_image-300x300.png\"}",
+            "{\"body\":\"We added 13 Gift Subs AND 10 Bonus Gift Subs to viewer8's gift! \",\"bits_spent\":0,\"fragments\":[{\"text\":\"We added 13 Gift Subs AND 10 Bonus Gift Subs to viewer8's gift! \",\"emoticon\":null}],\"user_badges\":[],\"user_color\":null,\"emoticons\":[]}")]
+        [InlineData("{\"display_name\":\"Twitch\",\"_id\":\"12826\",\"name\":\"twitch\",\"bio\":\"Twitch is where thousands of communities come together for whatever, every day. \",\"created_at\":\"2007-05-22T10:39:54.238271Z\",\"updated_at\":\"2024-09-22T22:28:39.594659Z\",\"logo\":\"https://static-cdn.jtvnw.net/jtv_user_pictures/aa88230d-7af5-4053-a7cd-889e626d3382-profile_image-300x300.png\"}",
+            "{\"body\":\"We added 1 Gift Subs to viewer8's gift! \",\"bits_spent\":0,\"fragments\":[{\"text\":\"We added 1 Gift Subs to viewer8's gift! \",\"emoticon\":null}],\"user_badges\":[],\"user_color\":null,\"emoticons\":[]}")]
+        [InlineData("{\"display_name\": \"VALORANT\",\"_id\": \"490592527\",\"name\": \"valorant\",\"bio\": \"VALORANT is a 5v5 character based tactical shooter video game from Riot Games. \",\"created_at\": \"2007-05-22T10:39:54.238271Z\",\"updated_at\": \"2024-09-22T22:28:39.594659Z\",\"logo\": \"https://static-cdn.jtvnw.net/jtv_user_pictures/34c5c8da-19b6-47b2-85ba-cc7ae87f1413-profile_image-300x300.png\"}",
+            "{\"body\":\"We added 13 Gift Subs AND 10 Bonus Gift Subs to viewer8's gift! \",\"bits_spent\":0,\"fragments\":[{\"text\":\"We added 13 Gift Subs AND 10 Bonus Gift Subs to viewer8's gift! \",\"emoticon\":null}],\"user_badges\":[],\"user_color\":null,\"emoticons\":[]}")]
+        [InlineData("{\"display_name\": \"VALORANT\",\"_id\": \"490592527\",\"name\": \"valorant\",\"bio\": \"VALORANT is a 5v5 character based tactical shooter video game from Riot Games. \",\"created_at\": \"2007-05-22T10:39:54.238271Z\",\"updated_at\": \"2024-09-22T22:28:39.594659Z\",\"logo\": \"https://static-cdn.jtvnw.net/jtv_user_pictures/34c5c8da-19b6-47b2-85ba-cc7ae87f1413-profile_image-300x300.png\"}",
+            "{\"body\":\"We added 1 Gift Subs to viewer8's gift! \",\"bits_spent\":0,\"fragments\":[{\"text\":\"We added 1 Gift Subs to viewer8's gift! \",\"emoticon\":null}],\"user_badges\":[],\"user_color\":null,\"emoticons\":[]}")]
+        public void CorrectlyIdentifiesBonusSubsGiftedMany(string commenterString, string messageString)
         {
-            const string COMMENTER_STRING =
-                "{\"display_name\":\"AnAnonymousGifter\",\"_id\":\"274598607\",\"name\":\"ananonymousgifter\",\"type\":\"user\",\"bio\":\"?????????????????????????????\",\"created_at\":\"2018-11-12T21:57:31.811529Z\",\"updated_at\":\"2022-04-18T21:57:27.392173Z\",\"logo\":\"https://static-cdn.jtvnw.net/jtv_user_pictures/ae7b05c6-c924-44ab-8203-475a2d3e488c-profile_image-300x300.png\"}";
-            const string MESSAGE_STRING =
-                "{\"body\":\"An anonymous user gifted a Tier 1 sub to viewer8!  \",\"bits_spent\":0,\"fragments\":[{\"text\":\"An anonymous user gifted a Tier 1 sub to viewer8!  \",\"emoticon\":null}],\"user_badges\":[],\"user_color\":null,\"emoticons\":[]}";
+            const HighlightType EXPECTED_TYPE = HighlightType.GiftedMany;
+
+            var commenter = JsonSerializer.Deserialize<Commenter>(commenterString)!;
+            var message = JsonSerializer.Deserialize<Message>(messageString)!;
+            var comment = CreateCommentWithCommenterAndMessage(commenter, message);
+
+            var actualType = HighlightIcons.GetHighlightType(comment);
+
+            Assert.Equal(EXPECTED_TYPE, actualType);
+        }
+
+        [Theory]
+        [InlineData("{\"display_name\":\"AnAnonymousGifter\",\"_id\":\"274598607\",\"name\":\"ananonymousgifter\",\"type\":\"user\",\"bio\":\"?????????????????????????????\",\"created_at\":\"2018-11-12T21:57:31.811529Z\",\"updated_at\":\"2022-04-18T21:57:27.392173Z\",\"logo\":\"https://static-cdn.jtvnw.net/jtv_user_pictures/ae7b05c6-c924-44ab-8203-475a2d3e488c-profile_image-300x300.png\"}",
+            "{\"body\":\"An anonymous user gifted a Tier 1 sub to viewer8!  \",\"bits_spent\":0,\"fragments\":[{\"text\":\"An anonymous user gifted a Tier 1 sub to viewer8!  \",\"emoticon\":null}],\"user_badges\":[],\"user_color\":null,\"emoticons\":[]}")]
+        [InlineData("{\"display_name\":\"Twitch\",\"_id\":\"12826\",\"name\":\"twitch\",\"bio\":\"Twitch is where thousands of communities come together for whatever, every day. \",\"created_at\":\"2007-05-22T10:39:54.238271Z\",\"updated_at\":\"2024-09-22T22:28:39.594659Z\",\"logo\":\"https://static-cdn.jtvnw.net/jtv_user_pictures/aa88230d-7af5-4053-a7cd-889e626d3382-profile_image-300x300.png\"}",
+            "{\"body\":\"An anonymous user gifted a Tier 1 sub to viewer8!  \",\"bits_spent\":0,\"fragments\":[{\"text\":\"An anonymous user gifted a Tier 1 sub to viewer8!  \",\"emoticon\":null}],\"user_badges\":[],\"user_color\":null,\"emoticons\":[]}")]
+        public void CorrectlyIdentifiesAnonymousGiftSub(string commenterString, string messageString)
+        {
             const HighlightType EXPECTED_TYPE = HighlightType.GiftedAnonymous;
 
-            var commenter = JsonSerializer.Deserialize<Commenter>(COMMENTER_STRING)!;
-            var message = JsonSerializer.Deserialize<Message>(MESSAGE_STRING)!;
+            var commenter = JsonSerializer.Deserialize<Commenter>(commenterString)!;
+            var message = JsonSerializer.Deserialize<Message>(messageString)!;
             var comment = CreateCommentWithCommenterAndMessage(commenter, message);
 
             var actualType = HighlightIcons.GetHighlightType(comment);

@@ -19,6 +19,7 @@ using TwitchDownloaderCore.Chat;
 using TwitchDownloaderCore.Extensions;
 using TwitchDownloaderCore.Interfaces;
 using TwitchDownloaderCore.Options;
+using TwitchDownloaderCore.Services;
 using TwitchDownloaderCore.Tools;
 using TwitchDownloaderCore.TwitchObjects;
 
@@ -45,6 +46,7 @@ namespace TwitchDownloaderCore
 
         private readonly ITaskProgress _progress;
         private readonly ChatRenderOptions renderOptions;
+        private readonly string _cacheDir;
         private List<ChatBadge> badgeList = new List<ChatBadge>();
         private List<TwitchEmote> emoteList = new List<TwitchEmote>();
         private List<TwitchEmote> emoteThirdList = new List<TwitchEmote>();
@@ -61,9 +63,7 @@ namespace TwitchDownloaderCore
         public ChatRenderer(ChatRenderOptions chatRenderOptions, ITaskProgress progress)
         {
             renderOptions = chatRenderOptions;
-            renderOptions.TempFolder = Path.Combine(
-                string.IsNullOrWhiteSpace(renderOptions.TempFolder) ? Path.GetTempPath() : renderOptions.TempFolder,
-                "TwitchDownloader");
+            _cacheDir = CacheDirectoryService.GetCacheDirectory(renderOptions.TempFolder);
             renderOptions.BlockArtPreWrapWidth = 29.166 * renderOptions.FontSize - renderOptions.SidePadding * 2;
             renderOptions.BlockArtPreWrap = renderOptions.ChatWidth > renderOptions.BlockArtPreWrapWidth;
             _progress = progress;
@@ -83,6 +83,23 @@ namespace TwitchDownloaderCore
             await using var outputFs = outputFileInfo.Open(FileMode.Create, FileAccess.Write, FileShare.Read);
             await using var maskFs = maskFileInfo?.Open(FileMode.Create, FileAccess.Write, FileShare.Read);
 
+            try
+            {
+                await RenderAsyncImpl(outputFileInfo, outputFs, maskFileInfo, maskFs, cancellationToken);
+            }
+            catch
+            {
+                await Task.Delay(100, CancellationToken.None);
+
+                TwitchHelper.CleanUpClaimedFile(outputFileInfo, outputFs, _progress);
+                TwitchHelper.CleanUpClaimedFile(maskFileInfo, maskFs, _progress);
+
+                throw;
+            }
+        }
+
+        private async Task RenderAsyncImpl(FileInfo outputFileInfo, FileStream outputFs, FileInfo maskFileInfo, FileStream maskFs, CancellationToken cancellationToken)
+        {
             _progress.SetStatus("Fetching Images [1/2]");
             await Task.Run(() => FetchScaledImages(cancellationToken), cancellationToken);
 
@@ -377,6 +394,8 @@ namespace TwitchDownloaderCore
                 }
             };
 
+            _progress.LogVerbose($"Running \"{renderOptions.FfmpegPath}\" in \"{process.StartInfo.WorkingDirectory}\" with args: {process.StartInfo.Arguments}");
+
             process.Start();
             process.BeginErrorReadLine();
             process.BeginOutputReadLine();
@@ -544,17 +563,24 @@ namespace TwitchDownloaderCore
             {
                 if (comment.message.user_notice_params.msg_id is not "highlighted-message" and not "sub" and not "resub" and not "subgift" and not "")
                 {
+                    _progress.LogVerbose($"{comment._id} has invalid {nameof(comment.message.user_notice_params)}: {comment.message.user_notice_params.msg_id}.");
                     return null;
                 }
-                if (comment.message.user_notice_params.msg_id == "highlighted-message" && comment.message.fragments == null && comment.message.body != null)
+
+                if (comment.message.user_notice_params.msg_id == "highlighted-message")
                 {
-                    comment.message.fragments = new List<Fragment> { new Fragment() };
-                    comment.message.fragments[0].text = comment.message.body;
+                    if (comment.message.fragments == null && comment.message.body != null)
+                    {
+                        comment.message.fragments = new List<Fragment> { new() { text = comment.message.body } };
+                    }
+
                     highlightType = HighlightType.ChannelPointHighlight;
                 }
             }
+
             if (comment.message.fragments == null || comment.commenter == null)
             {
+                _progress.LogVerbose($"{comment._id} lacks fragments and/or a commenter.");
                 return null;
             }
 
@@ -668,7 +694,7 @@ namespace TwitchDownloaderCore
             Point iconPoint = new()
             {
                 X = drawPos.X,
-                Y = (int)((renderOptions.SectionHeight - highlightIcon?.Height) / 2.0 ?? 0)
+                Y = (int)((renderOptions.SectionHeight - highlightIcon.Height) / 2.0)
             };
 
             switch (highlightType)
@@ -689,6 +715,7 @@ namespace TwitchDownloaderCore
                 case HighlightType.GiftedMany:
                 case HighlightType.GiftedSingle:
                 case HighlightType.GiftedAnonymous:
+                case HighlightType.ContinuingAnonymousGift:
                     DrawGiftMessage(comment, sectionImages, emotePositionList, ref drawPos, defaultPos, highlightIcon, iconPoint);
                     break;
                 case HighlightType.ChannelPointHighlight:
@@ -1667,7 +1694,7 @@ namespace TwitchDownloaderCore
                 return new List<ChatBadge>();
             }
 
-            var badgeTask = await TwitchHelper.GetChatBadges(chatRoot.comments, chatRoot.streamer.id, renderOptions.TempFolder, _progress, chatRoot.embeddedData, renderOptions.Offline, cancellationToken);
+            var badgeTask = await TwitchHelper.GetChatBadges(chatRoot.comments, chatRoot.streamer.id, _cacheDir, _progress, chatRoot.embeddedData, renderOptions.Offline, cancellationToken);
 
             foreach (var badge in badgeTask)
             {
@@ -1686,7 +1713,7 @@ namespace TwitchDownloaderCore
 
         private async Task<List<TwitchEmote>> GetScaledEmotes(CancellationToken cancellationToken)
         {
-            var emoteTask = await TwitchHelper.GetEmotes(chatRoot.comments, renderOptions.TempFolder, _progress, chatRoot.embeddedData, renderOptions.Offline, cancellationToken);
+            var emoteTask = await TwitchHelper.GetEmotes(chatRoot.comments, _cacheDir, _progress, chatRoot.embeddedData, renderOptions.Offline, cancellationToken);
 
             foreach (var emote in emoteTask)
             {
@@ -1705,7 +1732,7 @@ namespace TwitchDownloaderCore
 
         private async Task<List<TwitchEmote>> GetScaledThirdEmotes(CancellationToken cancellationToken)
         {
-            var emoteThirdTask = await TwitchHelper.GetThirdPartyEmotes(chatRoot.comments, chatRoot.streamer.id, renderOptions.TempFolder, _progress, chatRoot.embeddedData, renderOptions.BttvEmotes, renderOptions.FfzEmotes,
+            var emoteThirdTask = await TwitchHelper.GetThirdPartyEmotes(chatRoot.comments, chatRoot.streamer.id, _cacheDir, _progress, chatRoot.embeddedData, renderOptions.BttvEmotes, renderOptions.FfzEmotes,
                 renderOptions.StvEmotes, renderOptions.AllowUnlistedEmotes, renderOptions.Offline, cancellationToken);
 
             foreach (var emote in emoteThirdTask)
@@ -1725,7 +1752,7 @@ namespace TwitchDownloaderCore
 
         private async Task<List<CheerEmote>> GetScaledBits(CancellationToken cancellationToken)
         {
-            var cheerTask = await TwitchHelper.GetBits(chatRoot.comments, renderOptions.TempFolder, chatRoot.streamer.id.ToString(), chatRoot.embeddedData, renderOptions.Offline, cancellationToken);
+            var cheerTask = await TwitchHelper.GetBits(chatRoot.comments, _cacheDir, chatRoot.streamer.id.ToString(), _progress, chatRoot.embeddedData, renderOptions.Offline, cancellationToken);
 
             foreach (var cheer in cheerTask)
             {
@@ -1744,7 +1771,7 @@ namespace TwitchDownloaderCore
 
         private async Task<Dictionary<string, SKBitmap>> GetScaledEmojis(CancellationToken cancellationToken)
         {
-            var emojis = await TwitchHelper.GetEmojis(renderOptions.TempFolder, renderOptions.EmojiVendor, _progress, cancellationToken);
+            var emojis = await TwitchHelper.GetEmojis(_cacheDir, renderOptions.EmojiVendor, _progress, cancellationToken);
 
             //Assume emojis are 4x (they're 72x72)
             double emojiScale = 0.5 * renderOptions.ReferenceScale * renderOptions.EmojiScale;
@@ -1860,7 +1887,6 @@ namespace TwitchDownloaderCore
             chatRoot = await ChatJson.DeserializeAsync(renderOptions.InputFile, true, false, true, cancellationToken);
             return chatRoot;
         }
-
 
 #region ImplementIDisposable
 

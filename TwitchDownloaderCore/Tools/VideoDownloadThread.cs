@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -15,6 +16,7 @@ namespace TwitchDownloaderCore.Tools
         private readonly HttpClient _client;
         private readonly Uri _baseUrl;
         private readonly string _cacheFolder;
+        private readonly string _headerFile;
         private readonly DateTimeOffset _vodAirDate;
         private TimeSpan VodAge => DateTimeOffset.UtcNow - _vodAirDate;
         private readonly int _throttleKib;
@@ -22,8 +24,10 @@ namespace TwitchDownloaderCore.Tools
         private readonly CancellationToken _cancellationToken;
         public Task ThreadTask { get; private set; }
 
-        public VideoDownloadThread(ConcurrentQueue<string> videoPartsQueue, HttpClient httpClient, Uri baseUrl, string cacheFolder, DateTimeOffset vodAirDate, int throttleKib, ITaskLogger logger, CancellationToken cancellationToken)
+        public VideoDownloadThread(ConcurrentQueue<string> videoPartsQueue, HttpClient httpClient, Uri baseUrl, string cacheFolder, [AllowNull] string headerFile, DateTimeOffset vodAirDate, int throttleKib, ITaskLogger logger,
+            CancellationToken cancellationToken)
         {
+            _headerFile = headerFile;
             _videoPartsQueue = videoPartsQueue;
             _client = httpClient;
             _baseUrl = baseUrl;
@@ -43,16 +47,15 @@ namespace TwitchDownloaderCore.Tools
             }
 
             ThreadTask = Task.Factory.StartNew(
-                ExecuteDownloadThread,
+                Execute,
                 _cancellationToken,
                 TaskCreationOptions.LongRunning,
                 TaskScheduler.Current);
         }
 
-        private void ExecuteDownloadThread()
+        private void Execute()
         {
-            using var cts = new CancellationTokenSource();
-            _cancellationToken.Register(PropagateCancel, cts);
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(_cancellationToken);
 
             while (!_videoPartsQueue.IsEmpty)
             {
@@ -77,18 +80,8 @@ namespace TwitchDownloaderCore.Tools
                     throw;
                 }
 
-                const int A_PRIME_NUMBER = 71;
-                Thread.Sleep(A_PRIME_NUMBER);
+                Thread.Sleep(Random.Shared.Next(50, 150));
             }
-        }
-
-        private static void PropagateCancel(object tokenSourceToCancel)
-        {
-            try
-            {
-                (tokenSourceToCancel as CancellationTokenSource)?.Cancel();
-            }
-            catch (ObjectDisposedException) { }
         }
 
         /// <remarks>The <paramref name="cancellationTokenSource"/> may be canceled by this method.</remarks>
@@ -97,6 +90,7 @@ namespace TwitchDownloaderCore.Tools
             var tryUnmute = VodAge < TimeSpan.FromHours(24);
             var errorCount = 0;
             var timeoutCount = 0;
+            var lengthFailureCount = 0;
             while (true)
             {
                 cancellationTokenSource.Token.ThrowIfCancellationRequested();
@@ -104,24 +98,39 @@ namespace TwitchDownloaderCore.Tools
                 try
                 {
                     var partFile = Path.Combine(_cacheFolder, DownloadTools.RemoveQueryString(videoPartName));
+                    long expectedLength;
                     if (tryUnmute && videoPartName.Contains("-muted"))
                     {
                         var unmutedPartName = videoPartName.Replace("-muted", "");
-                        await DownloadTools.DownloadFileAsync(_client, new Uri(_baseUrl, unmutedPartName), partFile, _throttleKib, _logger, cancellationTokenSource);
+                        expectedLength = await DownloadTools.DownloadFileAsync(_client, new Uri(_baseUrl, unmutedPartName), partFile, _headerFile, _throttleKib, _logger, cancellationTokenSource);
                     }
                     else
                     {
-                        await DownloadTools.DownloadFileAsync(_client, new Uri(_baseUrl, videoPartName), partFile, _throttleKib, _logger, cancellationTokenSource);
+                        expectedLength = await DownloadTools.DownloadFileAsync(_client, new Uri(_baseUrl, videoPartName), partFile, _headerFile, _throttleKib, _logger, cancellationTokenSource);
+                    }
+
+                    // TODO: Support checking file length with header file
+                    if (string.IsNullOrWhiteSpace(_headerFile) && expectedLength > 0)
+                    {
+                        // I would love to compare hashes here but unfortunately Twitch doesn't give us a ContentMD5 header
+                        var actualLength = new FileInfo(partFile).Length;
+                        if (!VerifyFileLength(expectedLength, actualLength, partFile, ref lengthFailureCount))
+                        {
+                            await Delay(1_000, cancellationTokenSource.Token);
+                            continue;
+                        }
+
+                        CheckTsLength(partFile, actualLength);
                     }
 
                     return;
                 }
                 catch (HttpRequestException ex) when (tryUnmute && ex.StatusCode is HttpStatusCode.Forbidden)
                 {
-                    _logger.LogVerbose($"Received {ex.StatusCode}: {ex.StatusCode} when trying to unmute {videoPartName}. Disabling {nameof(tryUnmute)}.");
+                    _logger.LogVerbose($"Received HTTP {ex.StatusCode} when trying to unmute {videoPartName}. Disabling {nameof(tryUnmute)}.");
                     tryUnmute = false;
 
-                    await Task.Delay(100, cancellationTokenSource.Token);
+                    await Delay(100, cancellationTokenSource.Token);
                 }
                 catch (HttpRequestException ex)
                 {
@@ -133,7 +142,7 @@ namespace TwitchDownloaderCore.Tools
                         throw new HttpRequestException($"Video part {videoPartName} failed after {MAX_RETRIES} retries");
                     }
 
-                    await Task.Delay(1_000 * errorCount, cancellationTokenSource.Token);
+                    await Delay(1_000 * errorCount, cancellationTokenSource.Token);
                 }
                 catch (TaskCanceledException ex) when (ex.Message.Contains("HttpClient.Timeout"))
                 {
@@ -145,9 +154,45 @@ namespace TwitchDownloaderCore.Tools
                         throw new HttpRequestException($"Video part {videoPartName} timed out {MAX_RETRIES} times");
                     }
 
-                    await Task.Delay(5_000 * timeoutCount, cancellationTokenSource.Token);
+                    await Delay(5_000 * timeoutCount, cancellationTokenSource.Token);
                 }
             }
+
+            bool VerifyFileLength(long expectedLength, long actualLength, string partFile, ref int failureCount)
+            {
+                if (actualLength != expectedLength)
+                {
+                    const int MAX_RETRIES = 1;
+
+                    _logger.LogVerbose($"{partFile} failed to verify: expected {expectedLength:N0}B, got {actualLength:N0}B.");
+                    if (++failureCount > MAX_RETRIES)
+                    {
+                        throw new Exception($"Failed to download {partFile}: expected {expectedLength:N0}B, got {actualLength:N0}B");
+                    }
+
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+        private void CheckTsLength(string partFile, long length)
+        {
+            if (partFile.EndsWith(".ts"))
+            {
+                const int TS_PACKET_LENGTH = 188; // MPEG TS packets are made of a header and a body: [ 4B ][   184B   ] - https://tsduck.io/download/docs/mpegts-introduction.pdf
+                if (length % TS_PACKET_LENGTH != 0)
+                {
+                    _logger.LogVerbose($"{partFile} contains malformed packets and may cause encoding issues.");
+                }
+            }
+        }
+
+        private static Task Delay(int millis, CancellationToken cancellationToken)
+        {
+            var jitteredMillis = millis + Random.Shared.Next(-200, 200);
+            return Task.Delay(Math.Max(millis / 2, jitteredMillis), cancellationToken);
         }
     }
 }

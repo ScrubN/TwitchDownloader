@@ -2,26 +2,13 @@
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
     <OutputType>WinExe</OutputType>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
-    <PublishUrl>publish\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWPF>true</UseWPF>
-    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
     <Platforms>AnyCPU;x64</Platforms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>default</LangVersion>
     <!--TODO: <Nullable>enable</Nullable> once we have required keyword-->
   </PropertyGroup>
   <PropertyGroup>
@@ -38,6 +25,7 @@
   <ItemGroup>
     <Resource Include="Images\ppOverheat.gif" />
     <Resource Include="Images\ppHop.gif" />
+    <Resource Include="Images\ppStretch.gif" />
     <Resource Include="Images\peepoSad.png" />
   </ItemGroup>
   <ItemGroup>
@@ -58,15 +46,16 @@
     <ProjectReference Include="..\TwitchDownloaderCore\TwitchDownloaderCore.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DotNetProjects.Extended.Wpf.Toolkit" Version="5.0.115" />
+    <PackageReference Include="DotNetProjects.Extended.Wpf.Toolkit" Version="5.0.124" />
     <PackageReference Include="FontAwesome5" Version="2.1.11" />
     <PackageReference Include="HandyControl" Version="3.5.1" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Ookii.Dialogs.Wpf" Version="5.0.1" />
     <PackageReference Include="System.Management" Version="8.0.0" />
+    <PackageReference Include="WpfExtensions.Xaml" Version="1.2.0" />
     <PackageReference Include="WPFLocalizeExtension" Version="3.10.0" />
     <PackageReference Include="Xabe.FFmpeg.Downloader" Version="5.2.6" />
-    <PackageReference Include="Autoupdater.NET.Official" Version="1.8.6" />
+    <PackageReference Include="Autoupdater.NET.Official" Version="1.9.2" />
     <PackageReference Include="Emoji.Wpf" Version="0.3.4" />
     <PackageReference Include="WpfAnimatedGif" Version="2.0.2" />
   </ItemGroup>
@@ -96,7 +85,13 @@
     <EmbeddedResource Update="Translations\Strings.it.resx">
       <DependentUpon>Strings.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Update="Translations\Strings.ja.resx">
+      <DependentUpon>Strings.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Update="Translations\Strings.pl.resx">
+      <DependentUpon>Strings.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Translations\Strings.ru.resx">
       <DependentUpon>Strings.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Update="Translations\Strings.tr.resx">
@@ -105,13 +100,10 @@
         <EmbeddedResource Update="Translations\Strings.uk.resx">
       <DependentUpon>Strings.resx</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Update="Translations\Strings.ru.resx">
-      <DependentUpon>Strings.resx</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Update="Translations\Strings.zh-cn.resx">
       <DependentUpon>Strings.resx</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Update="Translations\Strings.ja.resx">
+    <EmbeddedResource Update="Translations\Strings.zh-tw.resx">
       <DependentUpon>Strings.resx</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>

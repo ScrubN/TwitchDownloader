@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Threading;
 using System.Windows;
@@ -17,9 +16,9 @@ namespace TwitchDownloaderWPF
     /// </summary>
     public partial class PageQueue : Page
     {
-        public static object taskLock = new object();
-        public static ObservableCollection<ITwitchTask> taskList { get; set; } = new ObservableCollection<ITwitchTask>();
-        BackgroundWorker taskManager = new BackgroundWorker();
+        public static readonly object taskLock = new object();
+        public static ObservableCollection<TwitchTask> taskList { get; } = new();
+        private static readonly BackgroundWorker taskManager = new BackgroundWorker();
 
         public PageQueue()
         {
@@ -33,16 +32,9 @@ namespace TwitchDownloaderWPF
 
             taskManager.DoWork += TaskManager_DoWork;
             taskManager.RunWorkerAsync();
-
-            taskList.CollectionChanged += TaskList_CollectionChanged;
         }
 
-        private void TaskList_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {
-
-        }
-
-        private void TaskManager_DoWork(object sender, DoWorkEventArgs e)
+        private static void TaskManager_DoWork(object sender, DoWorkEventArgs e)
         {
             while (true)
             {
@@ -55,10 +47,13 @@ namespace TwitchDownloaderWPF
                 int currentChat = 0;
                 int currentRender = 0;
 
-                foreach (var task in taskList)
+                lock (taskLock)
                 {
-                    if (task.Status == TwitchTaskStatus.Running)
+                    foreach (var task in taskList)
                     {
+                        if (task.Status is not TwitchTaskStatus.Running)
+                            continue;
+
                         switch (task)
                         {
                             case VodDownloadTask:
@@ -78,12 +73,12 @@ namespace TwitchDownloaderWPF
                                 break;
                         }
                     }
-                }
 
-                foreach (var task in taskList)
-                {
-                    if (task.CanRun())
+                    foreach (var task in taskList)
                     {
+                        if (!task.CanRun())
+                            continue;
+
                         switch (task)
                         {
                             case VodDownloadTask when currentVod < maxVod:
@@ -107,7 +102,6 @@ namespace TwitchDownloaderWPF
                                 task.RunAsync();
                                 break;
                         }
-                        continue;
                     }
                 }
 
@@ -204,7 +198,7 @@ namespace TwitchDownloaderWPF
 
         private void BtnCancelTask_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is not Button { DataContext: ITwitchTask task })
+            if (sender is not Button { DataContext: TwitchTask task })
             {
                 return;
             }
@@ -214,7 +208,7 @@ namespace TwitchDownloaderWPF
 
         private void MenuItemCancelTask_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is not MenuItem { DataContext: ITwitchTask task })
+            if (sender is not MenuItem { DataContext: TwitchTask task })
             {
                 return;
             }
@@ -222,7 +216,7 @@ namespace TwitchDownloaderWPF
             CancelTask(task);
         }
 
-        private static void CancelTask(ITwitchTask task)
+        private static void CancelTask(TwitchTask task)
         {
             if (task.CanCancel)
             {
@@ -232,7 +226,7 @@ namespace TwitchDownloaderWPF
 
         private void BtnTaskError_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is not Button { DataContext: ITwitchTask task })
+            if (sender is not Button { DataContext: TwitchTask task })
             {
                 return;
             }
@@ -242,7 +236,7 @@ namespace TwitchDownloaderWPF
 
         private void MenuItemTaskError_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is not MenuItem { DataContext: ITwitchTask task })
+            if (sender is not MenuItem { DataContext: TwitchTask task })
             {
                 return;
             }
@@ -250,19 +244,19 @@ namespace TwitchDownloaderWPF
             ShowTaskException(task);
         }
 
-        private static void ShowTaskException(ITwitchTask task)
+        private static void ShowTaskException(TwitchTask task)
         {
             var taskException = task.Exception;
 
-            if (taskException?.Exception == null)
+            if (taskException is null)
             {
                 return;
             }
 
-            var errorMessage = taskException.Exception.Message;
+            var errorMessage = taskException.Message;
             if (Settings.Default.VerboseErrors)
             {
-                errorMessage = taskException.Exception.ToString();
+                errorMessage = taskException.ToString();
             }
 
             MessageBox.Show(Application.Current.MainWindow!, errorMessage, Translations.Strings.MessageBoxTitleError, MessageBoxButton.OK, MessageBoxImage.Error);
@@ -270,7 +264,7 @@ namespace TwitchDownloaderWPF
 
         private void BtnRemoveTask_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is not Button { DataContext: ITwitchTask task })
+            if (sender is not Button { DataContext: TwitchTask task })
             {
                 return;
             }
@@ -280,7 +274,7 @@ namespace TwitchDownloaderWPF
 
         private void MenuItemRemoveTask_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is not MenuItem { DataContext: ITwitchTask task })
+            if (sender is not MenuItem { DataContext: TwitchTask task })
             {
                 return;
             }
@@ -288,7 +282,7 @@ namespace TwitchDownloaderWPF
             RemoveTask(task);
         }
 
-        private static void RemoveTask(ITwitchTask task)
+        private static void RemoveTask(TwitchTask task)
         {
             if (task.CanRun() || task.Status is TwitchTaskStatus.Running or TwitchTaskStatus.Waiting)
             {
@@ -296,20 +290,95 @@ namespace TwitchDownloaderWPF
                 return;
             }
 
-            if (!taskList.Remove(task))
+            lock (taskLock)
             {
-                MessageBox.Show(Application.Current.MainWindow!, Translations.Strings.TaskCouldNotBeRemoved, Translations.Strings.UnknownErrorOccurred, MessageBoxButton.OK, MessageBoxImage.Error);
+                if (!taskList.Remove(task))
+                {
+                    MessageBox.Show(Application.Current.MainWindow!, Translations.Strings.TaskCouldNotBeRemoved, Translations.Strings.UnknownErrorOccurred, MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 
         private void MenuItemOpenTaskFolder_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is not MenuItem { DataContext: ITwitchTask task })
+            if (sender is not MenuItem { DataContext: TwitchTask task })
             {
                 return;
             }
 
             FileService.OpenExplorerForFile(new FileInfo(task.OutputFile));
+        }
+
+        private void MenuItemCopyTaskPath_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not MenuItem { DataContext: TwitchTask task })
+            {
+                return;
+            }
+
+            Clipboard.SetText(task.OutputFile);
+        }
+
+        private void BtnRetryTask_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button { DataContext: TwitchTask task })
+            {
+                return;
+            }
+
+            RetryTask(task);
+        }
+
+        private void MenuItemTaskRetry_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not MenuItem { DataContext: TwitchTask task })
+            {
+                return;
+            }
+
+            RetryTask(task);
+        }
+
+        private static void RetryTask(TwitchTask task)
+        {
+            if (task.CanReinitialize)
+            {
+                task.Reinitialize();
+            }
+        }
+
+        private void BtnMoveTaskUp_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button { DataContext: TwitchTask task })
+            {
+                return;
+            }
+
+            lock (taskLock)
+            {
+                var index = taskList.IndexOf(task);
+                if (index < 1)
+                    return;
+
+                taskList.Move(index, index - 1);
+            }
+        }
+
+        private void BtnMoveTaskDown_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button { DataContext: TwitchTask task })
+            {
+                return;
+            }
+
+            lock (taskLock)
+            {
+                var index = taskList.IndexOf(task);
+                if (index == -1 || index == taskList.Count - 1)
+                    return;
+
+                taskList.Move(index, index + 1);
+            }
         }
     }
 }

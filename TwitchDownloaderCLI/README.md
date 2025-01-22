@@ -9,6 +9,7 @@ Also can concatenate/combine/merge Transport Stream files, either those parts do
   - [Arguments for mode chatdownload](#arguments-for-mode-chatdownload)
   - [Arguments for mode chatupdate](#arguments-for-mode-chatupdate)
   - [Arguments for mode chatrender](#arguments-for-mode-chatrender)
+  - [Arguments for mode info](#arguments-for-mode-info)
   - [Arguments for mode ffmpeg](#arguments-for-mode-ffmpeg)
   - [Arguments for mode cache](#arguments-for-mode-cache)
   - [Arguments for mode tsmerge](#arguments-for-mode-tsmerge)
@@ -31,7 +32,7 @@ Also can concatenate/combine/merge Transport Stream files, either those parts do
 (Default: `true`) Displays a banner containing version and copyright information.
 
 **--log-level**
-(Default: `Status,Info,Warning,Error`) Sets the log level flags. Applicable values are: `None`, `Status`, `Verbose`, `Info`, `Warning`, `Error`, `Ffmpeg`. When `None` is passed, any other log level flags are ignored and `--banner=false` is implied.
+(Default: `Status,Info,Warning,Error`) Sets the log level flags. Applicable values are: `None`, `Status`, `Verbose`, `Info`, `Warning`, `Error`, `Ffmpeg`. When `None` is passed, any other log level flags are ignored and `--banner=false` is implied. See [Enum flags](#enum-flag-arguments) for more help.
 
 ## Arguments for mode videodownload
 #### Downloads a stream VOD or highlight from Twitch
@@ -56,6 +57,9 @@ Time to trim ending. See [Time durations](#time-durations) for a more detailed e
 
 **--bandwidth**
 (Default: `-1`) The maximum bandwidth a thread will be allowed to use in kibibytes per second (KiB/s), or `-1` for no maximum.
+
+**--trim-mode**
+(Default: `Exact`) Sets the video trim handling. Videos trimmed with exact trim may rarely experience video/audio stuttering within the first/last few seconds. Safe trimming is guaranteed to not stutter but may result in a slightly longer video. Valid values are: `Safe`, `Exact`.
 
 **--oauth**
 OAuth access token to download subscriber only VODs. <ins>**DO NOT SHARE YOUR OAUTH TOKEN WITH ANYONE.**</ins>
@@ -285,7 +289,7 @@ Other = `1`, Broadcaster = `2`, Moderator = `4`, VIP = `8`, Subscriber = `16`, P
 (Default: `false`) Alternates the background color of every other chat message to help tell them apart.
 
 **--readable-colors**
-(Default: `false`) Increases the contrast of usernames against the background or outline color.
+(Default: `true`) Increases the contrast of usernames against the background or outline color.
 
 **--offline**
 (Default: `false`) Render completely offline using only embedded emotes, badges, and bits from the input json.
@@ -334,6 +338,22 @@ Other = `1`, Broadcaster = `2`, Moderator = `4`, VIP = `8`, Subscriber = `16`, P
 
 **--collision**
 (Default: `Prompt`) Sets the handling of output file name collisions. Valid values are: `Overwrite`, `Exit`, `Rename`, `Prompt`.
+
+## Arguments for mode info
+#### Prints information about a VOD, highlight, or clip
+
+**-u / --id (REQUIRED)** The ID or URL of the VOD or clip to print the stream info about.
+
+**-f / --format**
+(Default: `Table`) The format in which the information should be printed. Valid values are: `Raw`, `Table`, and `M3U` / `M3U8`.
+
+When using table format, use a terminal that supports ANSI escape sequences for best results.
+
+**--use-utf8**
+(Default: `true`) Ensures UTF-8 encoding is used when writing results to standard output.
+
+**--oauth**
+OAuth access token to access subscriber only VODs. <ins>**DO NOT SHARE YOUR OAUTH TOKEN WITH ANYONE.**</ins>
 
 ## Arguments for mode ffmpeg
 #### Manage standalone FFmpeg
@@ -405,6 +425,14 @@ Render a chat with custom video settings and message outlines
 
     ./TwitchDownloaderCLI chatrender -i chat.json -h 1440 -w 720 --framerate 60 --outline -o chat.mp4
 
+Display the info about a VOD in table format
+
+    ./TwitchDownloaderCLI info --id 612942303 --format table
+
+Display the info about a clip in raw format
+
+    ./TwitchDownloaderCLI info --id NurturingCalmHamburgerVoHiYo --format raw
+
 Render a chat with custom FFmpeg arguments
 
     ./TwitchDownloaderCLI chatrender -i chat.json --output-args='-c:v libx264 -preset veryfast -crf 18 -pix_fmt yuv420p "{save_path}"' -o chat.mp4
@@ -446,7 +474,7 @@ Default true boolean flags must be assigned: `--default-true-flag=false`. Defaul
 Enum flag arguments may be assigned without spaces `--flag Value1,Value2,Value3` or with spaces when wrapped in quotes `--flag "Value1, Value2, Value3"` (see [String arguments](#string-arguments)).
 
 ### Time durations
-Time duration arguments may be formatted in milliseconds `###ms`, seconds `###s`, minutes `###m`, hours `###h`, or [time](https://learn.microsoft.com/en-us/dotnet/api/system.timespan.parse?view=net-6.0) (i.e. `hh:mm:ss`, `hh:mm`, `dd.hh:mm:ss.ms`).
+Time duration arguments may be formatted in milliseconds `###ms`, seconds `###s`, minutes `###m`, hours `###h`, or [time](https://learn.microsoft.com/en-us/dotnet/api/system.timespan.parse?view=net-8.0) (i.e. `hh:mm:ss`, `hh:mm`, `dd.hh:mm:ss.ms`).
 If the time duration is given as a number without a unit, seconds will be assumed. Decimals are supported.
 
 "Beginning" arguments set when trimming begins. For example, `--beginning 17s` will make the output start 17 seconds after the source begins.

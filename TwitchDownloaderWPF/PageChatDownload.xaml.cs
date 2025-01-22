@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using TwitchDownloaderCore;
 using TwitchDownloaderCore.Options;
+using TwitchDownloaderCore.Services;
 using TwitchDownloaderCore.Tools;
 using TwitchDownloaderCore.TwitchObjects.Gql;
 using TwitchDownloaderWPF.Models;
@@ -27,10 +28,11 @@ namespace TwitchDownloaderWPF
     /// </summary>
     public partial class PageChatDownload : Page
     {
-
         public DownloadType downloadType;
         public string downloadId;
-        public int streamerId;
+        public string streamerId;
+        public string clipper;
+        public string clipperId;
         public DateTime currentVideoTime;
         public TimeSpan vodLength;
         public int viewCount;
@@ -44,7 +46,7 @@ namespace TwitchDownloaderWPF
 
         private void Page_Initialized(object sender, EventArgs e)
         {
-            SetEnabled(false, false);
+            SetEnabled(false);
             SetEnabledTrimStart(false);
             SetEnabledTrimEnd(false);
             checkEmbed.IsChecked = Settings.Default.ChatEmbedEmotes;
@@ -56,14 +58,28 @@ namespace TwitchDownloaderWPF
             {
                 ChatFormat.Text => radioText.IsChecked = true,
                 ChatFormat.Html => radioHTML.IsChecked = true,
-                _ => radioJson.IsChecked = true
+                ChatFormat.Json => radioJson.IsChecked = true,
+                _ => null,
+            };
+            _ = (ChatCompression)Settings.Default.ChatJsonCompression switch
+            {
+                ChatCompression.None => radioCompressionNone.IsChecked = true,
+                ChatCompression.Gzip => radioCompressionGzip.IsChecked = true,
+                _ => null,
+            };
+            _ = (TimestampFormat)Settings.Default.ChatTextTimestampStyle switch
+            {
+                TimestampFormat.Utc => radioTimestampUTC.IsChecked = true,
+                TimestampFormat.Relative => radioTimestampRelative.IsChecked = true,
+                TimestampFormat.None => radioTimestampNone.IsChecked = true,
+                _ => null,
             };
         }
 
-        private void SetEnabled(bool isEnabled, bool isClip)
+        private void SetEnabled(bool isEnabled)
         {
-            CheckTrimStart.IsEnabled = isEnabled & !isClip;
-            CheckTrimEnd.IsEnabled = isEnabled & !isClip;
+            CheckTrimStart.IsEnabled = isEnabled;
+            CheckTrimEnd.IsEnabled = isEnabled;
             radioTimestampRelative.IsEnabled = isEnabled;
             radioTimestampUTC.IsEnabled = isEnabled;
             radioTimestampNone.IsEnabled = isEnabled;
@@ -131,9 +147,14 @@ namespace TwitchDownloaderWPF
                     var videoTime = videoInfo.data.video.createdAt;
                     textCreatedAt.Text = Settings.Default.UTCVideoTime ? videoTime.ToString(CultureInfo.CurrentCulture) : videoTime.ToLocalTime().ToString(CultureInfo.CurrentCulture);
                     currentVideoTime = Settings.Default.UTCVideoTime ? videoTime : videoTime.ToLocalTime();
-                    streamerId = int.Parse(videoInfo.data.video.owner.id);
+                    streamerId = videoInfo.data.video.owner.id;
+                    clipper = null;
+                    clipperId = null;
                     viewCount = videoInfo.data.video.viewCount;
                     game = videoInfo.data.video.game?.displayName ?? Translations.Strings.UnknownGame;
+
+                    numStartHour.Maximum = (int)vodLength.TotalHours;
+                    numStartMinute.Maximum = 59;
                     var urlTimeCodeMatch = TwitchRegex.UrlTimeCode().Match(textUrl.Text);
                     if (urlTimeCodeMatch.Success)
                     {
@@ -149,14 +170,14 @@ namespace TwitchDownloaderWPF
                         numStartMinute.Value = 0;
                         numStartSecond.Value = 0;
                     }
-                    numStartHour.Maximum = (int)vodLength.TotalHours;
 
-                    numEndHour.Value = (int)vodLength.TotalHours;
                     numEndHour.Maximum = (int)vodLength.TotalHours;
+                    numEndHour.Value = (int)vodLength.TotalHours;
+                    numEndMinute.Maximum = 59;
                     numEndMinute.Value = vodLength.Minutes;
                     numEndSecond.Value = vodLength.Seconds;
                     labelLength.Text = vodLength.ToString("c");
-                    SetEnabled(true, false);
+                    SetEnabled(true);
                 }
                 else if (downloadType == DownloadType.Clip)
                 {
@@ -171,17 +192,29 @@ namespace TwitchDownloaderWPF
                     }
                     imgThumbnail.Source = image;
 
-                    TimeSpan clipLength = TimeSpan.FromSeconds(clipInfo.data.clip.durationSeconds);
+                    vodLength = TimeSpan.FromSeconds(clipInfo.data.clip.durationSeconds);
                     textStreamer.Text = clipInfo.data.clip.broadcaster?.displayName ?? Translations.Strings.UnknownUser;
                     var clipCreatedAt = clipInfo.data.clip.createdAt;
                     textCreatedAt.Text = Settings.Default.UTCVideoTime ? clipCreatedAt.ToString(CultureInfo.CurrentCulture) : clipCreatedAt.ToLocalTime().ToString(CultureInfo.CurrentCulture);
                     currentVideoTime = Settings.Default.UTCVideoTime ? clipCreatedAt : clipCreatedAt.ToLocalTime();
                     textTitle.Text = clipInfo.data.clip.title;
-                    streamerId = int.Parse(clipInfo.data.clip.broadcaster?.id ?? "-1");
-                    labelLength.Text = clipLength.ToString("c");
-                    SetEnabled(true, true);
-                    SetEnabledTrimStart(false);
-                    SetEnabledTrimEnd(false);
+                    streamerId = clipInfo.data.clip.broadcaster?.id;
+                    clipper = clipInfo.data.clip.curator?.displayName ?? Translations.Strings.UnknownUser;
+                    clipperId = clipInfo.data.clip.curator?.id;
+                    labelLength.Text = vodLength.ToString("c");
+                    SetEnabled(true);
+
+                    numStartHour.Maximum = 0;
+                    numStartHour.Value = 0;
+                    numStartMinute.Maximum = vodLength.Minutes;
+                    numStartMinute.Value = 0;
+                    numStartSecond.Value = 0;
+
+                    numEndHour.Maximum = 0;
+                    numEndHour.Value = 0;
+                    numEndMinute.Maximum = vodLength.Minutes;
+                    numEndMinute.Value = vodLength.Minutes;
+                    numEndSecond.Value = vodLength.Seconds;
                 }
 
                 btnGetInfo.IsEnabled = true;
@@ -212,7 +245,7 @@ namespace TwitchDownloaderWPF
 
         public static string ValidateUrl(string text)
         {
-            var vodClipIdMatch = TwitchRegex.MatchVideoOrClipId(text);
+            var vodClipIdMatch = IdParse.MatchVideoOrClipId(text);
             return vodClipIdMatch is { Success: true }
                 ? vodClipIdMatch.Value
                 : null;
@@ -255,6 +288,28 @@ namespace TwitchDownloaderWPF
             else if (radioCompressionGzip.IsChecked == true)
                 options.Compression = ChatCompression.Gzip;
 
+            if (CheckTrimStart.IsChecked == true)
+            {
+                options.TrimBeginning = true;
+                TimeSpan start = new TimeSpan((int)numStartHour.Value, (int)numStartMinute.Value, (int)numStartSecond.Value);
+                options.TrimBeginningTime = (int)start.TotalSeconds;
+            }
+
+            if (CheckTrimEnd.IsChecked == true)
+            {
+                options.TrimEnding = true;
+                TimeSpan end = new TimeSpan((int)numEndHour.Value, (int)numEndMinute.Value, (int)numEndSecond.Value);
+                options.TrimEndingTime = (int)end.TotalSeconds;
+            }
+
+            if (radioTimestampUTC.IsChecked == true)
+                options.TimeFormat = TimestampFormat.Utc;
+            else if (radioTimestampRelative.IsChecked == true)
+                options.TimeFormat = TimestampFormat.Relative;
+            else if (radioTimestampNone.IsChecked == true)
+                options.TimeFormat = TimestampFormat.None;
+
+            options.Id = downloadId;
             options.EmbedData = checkEmbed.IsChecked.GetValueOrDefault();
             options.BttvEmotes = checkBttvEmbed.IsChecked.GetValueOrDefault();
             options.FfzEmotes = checkFfzEmbed.IsChecked.GetValueOrDefault();
@@ -450,10 +505,10 @@ namespace TwitchDownloaderWPF
 
             var saveFileDialog = new SaveFileDialog
             {
-                FileName = FilenameService.GetFilename(Settings.Default.TemplateChat, textTitle.Text, downloadId, currentVideoTime, textStreamer.Text,
+                FileName = FilenameService.GetFilename(Settings.Default.TemplateChat, textTitle.Text, downloadId, currentVideoTime, textStreamer.Text, streamerId,
                     CheckTrimStart.IsChecked == true ? new TimeSpan((int)numStartHour.Value, (int)numStartMinute.Value, (int)numStartSecond.Value) : TimeSpan.Zero,
                     CheckTrimEnd.IsChecked == true ? new TimeSpan((int)numEndHour.Value, (int)numEndMinute.Value, (int)numEndSecond.Value) : vodLength,
-                    viewCount, game)
+                    viewCount, game, clipper, clipperId)
             };
 
             if (radioJson.IsChecked == true)
@@ -488,41 +543,12 @@ namespace TwitchDownloaderWPF
             try
             {
                 ChatDownloadOptions downloadOptions = GetOptions(saveFileDialog.FileName);
-                if (downloadType == DownloadType.Video)
-                {
-                    if (CheckTrimStart.IsChecked == true)
-                    {
-                        downloadOptions.TrimBeginning = true;
-                        TimeSpan start = new TimeSpan((int)numStartHour.Value, (int)numStartMinute.Value, (int)numStartSecond.Value);
-                        downloadOptions.TrimBeginningTime = (int)start.TotalSeconds;
-                    }
-
-                    if (CheckTrimEnd.IsChecked == true)
-                    {
-                        downloadOptions.TrimEnding = true;
-                        TimeSpan end = new TimeSpan((int)numEndHour.Value, (int)numEndMinute.Value, (int)numEndSecond.Value);
-                        downloadOptions.TrimEndingTime = (int)end.TotalSeconds;
-                    }
-
-                    downloadOptions.Id = downloadId;
-                }
-                else
-                {
-                    downloadOptions.Id = downloadId;
-                }
-
-                if (radioTimestampUTC.IsChecked == true)
-                    downloadOptions.TimeFormat = TimestampFormat.Utc;
-                else if (radioTimestampRelative.IsChecked == true)
-                    downloadOptions.TimeFormat = TimestampFormat.Relative;
-                else if (radioTimestampNone.IsChecked == true)
-                    downloadOptions.TimeFormat = TimestampFormat.None;
 
                 var downloadProgress = new WpfTaskProgress((LogLevel)Settings.Default.LogLevels, SetPercent, SetStatus, AppendLog);
                 var currentDownload = new ChatDownloader(downloadOptions, downloadProgress);
 
                 btnGetInfo.IsEnabled = false;
-                SetEnabled(false, false);
+                SetEnabled(false);
 
                 SetImage("Images/ppOverheat.gif", true);
                 statusMessage.Text = Translations.Strings.StatusDownloading;
@@ -555,7 +581,6 @@ namespace TwitchDownloaderWPF
                 _cancellationTokenSource.Dispose();
                 UpdateActionButtons(false);
 
-                currentDownload = null;
                 GC.Collect();
             }
             catch (Exception ex)
@@ -567,6 +592,7 @@ namespace TwitchDownloaderWPF
         private void BtnCancel_Click(object sender, RoutedEventArgs e)
         {
             statusMessage.Text = Translations.Strings.StatusCanceling;
+            SetImage("Images/ppStretch.gif", true);
             try
             {
                 _cancellationTokenSource.Cancel();
@@ -583,7 +609,6 @@ namespace TwitchDownloaderWPF
         {
             SetEnabledTrimEnd(CheckTrimEnd.IsChecked.GetValueOrDefault());
         }
-
 
         private void MenuItemEnqueue_Click(object sender, RoutedEventArgs e)
         {
@@ -602,6 +627,51 @@ namespace TwitchDownloaderWPF
                 await GetVideoInfo();
                 e.Handled = true;
             }
+        }
+
+        private void RadioCompressionNone_OnCheckedChanged(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized)
+                return;
+
+            Settings.Default.ChatJsonCompression = (int)ChatCompression.None;
+            Settings.Default.Save();
+        }
+
+        private void RadioCompressionGzip_OnCheckedChanged(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized)
+                return;
+
+            Settings.Default.ChatJsonCompression = (int)ChatCompression.Gzip;
+            Settings.Default.Save();
+        }
+
+        private void RadioTimestampUTC_OnCheckedChanged(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized)
+                return;
+
+            Settings.Default.ChatTextTimestampStyle = (int)TimestampFormat.Utc;
+            Settings.Default.Save();
+        }
+
+        private void RadioTimestampRelative_OnCheckedChanged(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized)
+                return;
+
+            Settings.Default.ChatTextTimestampStyle = (int)TimestampFormat.Relative;
+            Settings.Default.Save();
+        }
+
+        private void RadioTimestampNone_OnCheckedChanged(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized)
+                return;
+
+            Settings.Default.ChatTextTimestampStyle = (int)TimestampFormat.None;
+            Settings.Default.Save();
         }
     }
 }

@@ -15,7 +15,7 @@ namespace TwitchDownloaderWPF.Services
 
         [DllImport("user32.dll", EntryPoint = "FlashWindowEx", PreserveSig = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool FlashWindowEx(FlashWInfo info);
+        public static extern bool FlashWindowEx([In] ref FlashWInfo info);
 
         // https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-flashwinfo
         [StructLayout(LayoutKind.Sequential)]
@@ -27,12 +27,14 @@ namespace TwitchDownloaderWPF.Services
             public uint FlashCount;
             public uint Timeout;
 
+            // ReSharper disable InconsistentNaming
             public const uint FLASHW_STOP = 0;
             public const uint FLASHW_CAPTION = 1;
             public const uint FLASHW_TRAY = 2;
             public const uint FLASHW_ALL = 3;
             public const uint FLASHW_TIMER = 4;
             public const uint FLASHW_TIMERNOFG = 12;
+            // ReSharper restore InconsistentNaming
         }
     }
 }

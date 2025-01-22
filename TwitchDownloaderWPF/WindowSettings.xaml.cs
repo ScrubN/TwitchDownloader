@@ -1,11 +1,16 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Input;
 using HandyControl.Data;
 using Microsoft.Win32;
+using TwitchDownloaderCore.Services;
+using TwitchDownloaderWPF.Extensions;
 using TwitchDownloaderWPF.Models;
 using TwitchDownloaderWPF.Properties;
 using TwitchDownloaderWPF.Services;
@@ -95,6 +100,17 @@ namespace TwitchDownloaderWPF
                     ComboLogLevels.SelectedItems.Add(item);
                 }
             }
+
+            var currentCollisionBehavior = (CollisionBehavior)Settings.Default.FileCollisionBehavior;
+            for (var i = 0; i < ComboFileCollisionBehavior.Items.Count; i++)
+            {
+                var current = (ComboBoxItem)ComboFileCollisionBehavior.Items[i]!;
+                if (currentCollisionBehavior == (CollisionBehavior)current.Tag)
+                {
+                    ComboFileCollisionBehavior.SelectedIndex = i;
+                    break;
+                }
+            }
         }
 
         private void BtnClearCache_Click(object sender, RoutedEventArgs e)
@@ -103,24 +119,8 @@ namespace TwitchDownloaderWPF
             if (messageBoxResult == MessageBoxResult.Yes)
             {
                 //Let's clear the user selected temp folder and the default one
-                string defaultDir = Path.Combine(Path.GetTempPath(), "TwitchDownloader");
-                string tempDir = Path.Combine(Settings.Default.TempPath, "TwitchDownloader");
-                if (Directory.Exists(defaultDir))
-                {
-                    try
-                    {
-                        Directory.Delete(defaultDir, true);
-                    }
-                    catch { }
-                }
-                if (Directory.Exists(tempDir))
-                {
-                    try
-                    {
-                        Directory.Delete(tempDir, true);
-                    }
-                    catch { }
-                }
+                CacheDirectoryService.ClearCacheDirectory(Settings.Default.TempPath, out _);
+                CacheDirectoryService.ClearCacheDirectory(Path.GetTempPath(), out _);
             }
         }
 
@@ -327,6 +327,61 @@ namespace TwitchDownloaderWPF
                 .Cast<CheckComboBoxItem>()
                 .Sum(item => (int)item.Tag);
             Settings.Default.LogLevels = newLogLevel;
+        }
+
+        private void ComboFileCollisionBehavior_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!IsInitialized)
+                return;
+
+            var behavior = (ComboBoxItem)ComboFileCollisionBehavior.SelectedItem;
+            Settings.Default.FileCollisionBehavior = (int)behavior.Tag;
+        }
+
+        private void FilenameParameter_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (!IsInitialized || sender is not Run { Text: var parameter })
+                return;
+
+            if (e.ChangedButton is not MouseButton.Left and not MouseButton.Middle)
+                return;
+
+            var focusedElement = Keyboard.FocusedElement;
+            var textBox = GetFilenameTemplateTextBox(focusedElement);
+
+            if (textBox is null)
+                return;
+
+            var oldCaretPos = textBox.CaretIndex;
+            if (!textBox.TryInsertAtCaret(parameter))
+                return;
+
+            if (e.ChangedButton is MouseButton.Middle && oldCaretPos != -1)
+            {
+                // If we inserted a *_custom template, we can focus inside the quotation marks
+                var quoteIndex = parameter.LastIndexOf('"');
+                if (quoteIndex != -1)
+                {
+                    textBox.CaretIndex = oldCaretPos + quoteIndex;
+                }
+            }
+
+            e.Handled = true;
+        }
+
+        [return: MaybeNull]
+        private TextBox GetFilenameTemplateTextBox(IInputElement inputElement)
+        {
+            if (ReferenceEquals(inputElement, TextVodTemplate))
+                return TextVodTemplate;
+
+            if (ReferenceEquals(inputElement, TextClipTemplate))
+                return TextClipTemplate;
+
+            if (ReferenceEquals(inputElement, TextChatTemplate))
+                return TextChatTemplate;
+
+            return null;
         }
     }
 }

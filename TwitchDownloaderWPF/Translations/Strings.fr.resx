@@ -168,7 +168,7 @@
     <value>Coupe Chat:</value>
   </data>
   <data name="ChatDownload" xml:space="preserve">
-    <value>Télécharger du Chat</value>
+    <value>Télécharger un chat</value>
   </data>
   <data name="ChatDownloads" xml:space="preserve">
     <value>Téléchargements de Chats</value>
@@ -204,7 +204,7 @@
     <value>Vous êtes sûr de vouloir vider le cache ?\nYou should only really do this if the program isn't working correctly</value>
   </data>
   <data name="ClipDownload" xml:space="preserve">
-    <value>Télécharger du Clip</value>
+    <value>Télécharger un clip</value>
   </data>
   <data name="ClipDownloads" xml:space="preserve">
     <value>Téléchargements de clips</value>
@@ -287,19 +287,11 @@
   <data name="FfmpegOutputArguments" xml:space="preserve">
     <value>Output Arguments:</value>
   </data>
-  <data name="FfmpegParameters" xml:space="preserve">
-    <value>{fps} {height} {width} {max_int} {save_path}</value>
-    <comment>Do not translate</comment>
-  </data>
   <data name="FfmpegReset" xml:space="preserve">
     <value>Réinitialiser</value>
   </data>
   <data name="FfzEmotes" xml:space="preserve">
     <value>Emoticônes FFZ:</value>
-  </data>
-  <data name="FilenameTemplateParameters" xml:space="preserve">
-    <value>{title} {id} {date} {channel} {date_custom=""} {random_string} {trim_start} {trim_end} {trim_start_custom=""} {trim_end_custom=""} {length} {length_custom=""} {views} {game}</value>
-    <comment>Do not translate</comment>
   </data>
   <data name="FontColor" xml:space="preserve">
     <value>Couleur de la police:</value>
@@ -474,7 +466,7 @@
     <value>Erreur</value>
   </data>
   <data name="TaskQueue" xml:space="preserve">
-    <value>Queue de travaux</value>
+    <value>File d'attente</value>
   </data>
   <data name="ThirdPartyEmotes" xml:space="preserve">
     <value>Emoticônes de tiers </value>
@@ -565,7 +557,7 @@
     <value>Lien Vidéo/Clip:</value>
   </data>
   <data name="VodDownload" xml:space="preserve">
-    <value>Télécharger du vidéos</value>
+    <value>Télécharger une vidéo</value>
   </data>
   <data name="VodDownloads" xml:space="preserve">
     <value>Téléchargements de vidéos</value>
@@ -636,8 +628,7 @@
     <value>Le thème n'a pas été trouvé</value>
   </data>
   <data name="ThemeNotFoundMessage" xml:space="preserve">
-    <value>{theme} n'a pas été trouvé. Passage au thème système</value>
-    <comment>Do not translate {theme}</comment>
+    <value>{0} n'a pas été trouvé. Passage au thème système</value>
   </data>
   <data name="MessageDispersion" xml:space="preserve">
     <value>Dispersion </value>
@@ -683,7 +674,7 @@
   <data name="InvalidFolderPath" xml:space="preserve">
     <value>Chemin d'accès au répertoire non valide</value>
   </data>
-  <data name="InvaliFolderPathMessage" xml:space="preserve">
+  <data name="InvalidFolderPathMessage" xml:space="preserve">
     <value>Le répertoire n'existe pas</value>
   </data>
   <data name="StatusCanceled" xml:space="preserve">
@@ -926,5 +917,101 @@
   </data>
   <data name="FileAlreadyExistsRememberMyChoice" xml:space="preserve">
     <value>Remember my choice for this session</value>
+  </data>
+  <data name="VideoTrimMode" xml:space="preserve">
+    <value>Trim Mode </value><comment>Leave a trailing space</comment>
+  </data>
+  <data name="VideoTrimModeSafe" xml:space="preserve">
+    <value>Safe</value>
+  </data>
+  <data name="VideoTrimModeExact" xml:space="preserve">
+    <value>Exact</value>
+  </data>
+  <data name="VideoTrimModeTooltip" xml:space="preserve">
+    <value>Videos trimmed with exact trim may rarely experience video/audio stuttering within the first/last few seconds. Safe trimming is guaranteed to not stutter but may result in a slightly longer video.</value>
+  </data>
+  <data name="TaskRetry" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="UnableToGetChannelVideos" xml:space="preserve">
+    <value>Unable to Get Videos</value>
+  </data>
+  <data name="UnableToGetChannelVideosMessage" xml:space="preserve">
+    <value>Unable to get channel videos: {0}</value>
+  </data>
+  <data name="UnableToGetChannelClips" xml:space="preserve">
+    <value>Unable to Get Clips</value>
+  </data>
+  <data name="UnableToGetChannelClipsMessage" xml:space="preserve">
+    <value>Unable to get channel clips: {0}</value>
+  </data>
+  <data name="FilenameParameterTitleTooltip" xml:space="preserve">
+    <value>The title of the video/clip.</value>
+  </data>
+  <data name="FilenameParameterIdTooltip" xml:space="preserve">
+    <value>The ID of the video/clip.</value>
+  </data>
+  <data name="FilenameParameterDateTooltip" xml:space="preserve">
+    <value>The date that the video/clip was created in the format M-d-yy.</value>
+  </data>
+  <data name="FilenameParameterDateCustomTooltip" xml:space="preserve">
+    <value>The date that the video/clip was created in a customizable format.</value>
+  </data>
+  <data name="FilenameParameterChannelTooltip" xml:space="preserve">
+    <value>The display name of the channel which owns the video/clip/chat.</value>
+  </data>
+  <data name="FilenameParameterRandomStringTooltip" xml:space="preserve">
+    <value>A string of 11 random characters.</value>
+  </data>
+  <data name="FilenameParameterTrimStartTooltip" xml:space="preserve">
+    <value>The start trim of the video/chat in the format hh-mm-ss.</value>
+  </data>
+  <data name="FilenameParameterTrimStartCustomTooltip" xml:space="preserve">
+    <value>The start trim of the video/chat in a customizable format.</value>
+  </data>
+  <data name="FilenameParameterTrimEndTooltip" xml:space="preserve">
+    <value>The end trim of the video/chat in the format hh-mm-ss.</value>
+  </data>
+  <data name="FilenameParameterTrimEndCustomTooltip" xml:space="preserve">
+    <value>The end trim of the video/chat in a customizable format.</value>
+  </data>
+  <data name="FilenameParameterLengthTooltip" xml:space="preserve">
+    <value>The length (including trim) of the video/clip/chat in the format hh-mm-ss.</value>
+  </data>
+  <data name="FilenameParameterLengthCustomTooltip" xml:space="preserve">
+    <value>The length (including trim) of the video/clip/chat in a customizable format.</value>
+  </data>
+  <data name="FilenameParameterViewsTooltip" xml:space="preserve">
+    <value>The amount of views the video/clip has.</value>
+  </data>
+  <data name="FilenameParameterGameTooltip" xml:space="preserve">
+    <value>The display name of the primary game/category in the video/clip/chat.</value>
+  </data>
+  <data name="FileCollisionBehavior" xml:space="preserve">
+    <value>File Collision Behavior</value>
+  </data>
+  <data name="FileCollisionBehaviorTooltip" xml:space="preserve">
+    <value>The default handling for file collisions in the task queue. If a choice has already been remembered for the current session, an application restart will be required to override it.</value>
+  </data>
+  <data name="FileCollisionBehaviorAsk" xml:space="preserve">
+    <value>Ask</value>
+  </data>
+  <data name="FileCollisionBehaviorOverwrite" xml:space="preserve">
+    <value>Overwrite</value>
+  </data>
+  <data name="FileCollisionBehaviorRename" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="FileCollisionBehaviorCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="FilenameParameterChannelIdTooltip" xml:space="preserve">
+    <value>The ID of the channel which owns the video/clip/chat.</value>
+  </data>
+  <data name="FilenameParameterClipperTooltip" xml:space="preserve">
+    <value>The display name of the channel which created the clip, or empty for videos.</value>
+  </data>
+  <data name="FilenameParameterClipperIdTooltip" xml:space="preserve">
+    <value>The ID of the channel which created the clip, or empty for videos.</value>
   </data>
 </root>

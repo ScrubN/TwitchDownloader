@@ -5,6 +5,7 @@ using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -12,18 +13,21 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using TwitchDownloaderCore;
 using TwitchDownloaderCore.Chat;
 using TwitchDownloaderCore.Options;
 using TwitchDownloaderCore.TwitchObjects;
+using TwitchDownloaderWPF.Extensions;
 using TwitchDownloaderWPF.Models;
 using TwitchDownloaderWPF.Properties;
-using TwitchDownloaderWPF.Translations;
 using TwitchDownloaderWPF.Utils;
 using WpfAnimatedGif;
 using MessageBox = System.Windows.MessageBox;
+using TextBox = System.Windows.Controls.TextBox;
 
 namespace TwitchDownloaderWPF
 {
@@ -197,14 +201,14 @@ namespace TwitchDownloaderWPF
                 RadioEmojiNone.IsChecked = (EmojiVendor)Settings.Default.RenderEmojiVendor == EmojiVendor.None;
 
                 comboBadges.Items.Clear();
-                comboBadges.Items.Add(new CheckComboBoxItem { Content = Strings.BadgeMaskBroadcaster, Tag = ChatBadgeType.Broadcaster });
-                comboBadges.Items.Add(new CheckComboBoxItem { Content = Strings.BadgeMaskModerator, Tag = ChatBadgeType.Moderator });
-                comboBadges.Items.Add(new CheckComboBoxItem { Content = Strings.BadgeMaskVIP, Tag = ChatBadgeType.VIP });
-                comboBadges.Items.Add(new CheckComboBoxItem { Content = Strings.BadgeMaskSubscriber, Tag = ChatBadgeType.Subscriber });
-                comboBadges.Items.Add(new CheckComboBoxItem { Content = Strings.BadgeMaskPredictions, Tag = ChatBadgeType.Predictions });
-                comboBadges.Items.Add(new CheckComboBoxItem { Content = Strings.BadgeMaskNoAudioNoVideo, Tag = ChatBadgeType.NoAudioVisual });
-                comboBadges.Items.Add(new CheckComboBoxItem { Content = Strings.BadgeMaskTwitchPrime, Tag = ChatBadgeType.PrimeGaming });
-                comboBadges.Items.Add(new CheckComboBoxItem { Content = Strings.BadgeMaskOthers, Tag = ChatBadgeType.Other });
+                comboBadges.Items.Add(new CheckComboBoxItem { Content = Translations.Strings.BadgeMaskBroadcaster, Tag = ChatBadgeType.Broadcaster });
+                comboBadges.Items.Add(new CheckComboBoxItem { Content = Translations.Strings.BadgeMaskModerator, Tag = ChatBadgeType.Moderator });
+                comboBadges.Items.Add(new CheckComboBoxItem { Content = Translations.Strings.BadgeMaskVIP, Tag = ChatBadgeType.VIP });
+                comboBadges.Items.Add(new CheckComboBoxItem { Content = Translations.Strings.BadgeMaskSubscriber, Tag = ChatBadgeType.Subscriber });
+                comboBadges.Items.Add(new CheckComboBoxItem { Content = Translations.Strings.BadgeMaskPredictions, Tag = ChatBadgeType.Predictions });
+                comboBadges.Items.Add(new CheckComboBoxItem { Content = Translations.Strings.BadgeMaskNoAudioNoVideo, Tag = ChatBadgeType.NoAudioVisual });
+                comboBadges.Items.Add(new CheckComboBoxItem { Content = Translations.Strings.BadgeMaskTwitchPrime, Tag = ChatBadgeType.PrimeGaming });
+                comboBadges.Items.Add(new CheckComboBoxItem { Content = Translations.Strings.BadgeMaskOthers, Tag = ChatBadgeType.Other });
 
                 var badgeMask = (ChatBadgeType)Settings.Default.ChatBadgeMask;
                 foreach (CheckComboBoxItem item in comboBadges.Items)
@@ -685,7 +689,7 @@ namespace TwitchDownloaderWPF
                 UpdateActionButtons(false);
 
                 currentRender.Dispose();
-                GC.Collect(2, GCCollectionMode.Default, false);
+                GC.Collect();
             }
         }
 
@@ -697,6 +701,7 @@ namespace TwitchDownloaderWPF
         private void BtnCancel_Click(object sender, RoutedEventArgs e)
         {
             statusMessage.Text = Translations.Strings.StatusCanceling;
+            SetImage("Images/ppStretch.gif", true);
             try
             {
                 _cancellationTokenSource.Cancel();
@@ -738,8 +743,43 @@ namespace TwitchDownloaderWPF
 
         private void TextJson_TextChanged(object sender, TextChangedEventArgs e)
         {
+            if (!IsInitialized)
+                return;
+
             FileNames = textJson.Text.Split("&&", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
             UpdateActionButtons(false);
+        }
+
+        private void FfmpegParameter_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (!IsInitialized || sender is not Run { Text: var parameter })
+                return;
+
+            if (e.ChangedButton is not MouseButton.Left and not MouseButton.Middle)
+                return;
+
+            var focusedElement = Keyboard.FocusedElement;
+            var textBox = GetFfmpegTemplateTextBox(focusedElement);
+
+            if (textBox is null)
+                return;
+
+            if (textBox.TryInsertAtCaret(parameter))
+            {
+                e.Handled = true;
+            }
+        }
+
+        [return: MaybeNull]
+        private TextBox GetFfmpegTemplateTextBox(IInputElement inputElement)
+        {
+            if (ReferenceEquals(inputElement, textFfmpegInput))
+                return textFfmpegInput;
+
+            if (ReferenceEquals(inputElement, textFfmpegOutput))
+                return textFfmpegOutput;
+
+            return null;
         }
     }
 

@@ -12,6 +12,7 @@ using System.Windows.Media.Imaging;
 using TwitchDownloaderCore;
 using TwitchDownloaderCore.Chat;
 using TwitchDownloaderCore.Options;
+using TwitchDownloaderCore.Services;
 using TwitchDownloaderCore.Tools;
 using TwitchDownloaderCore.TwitchObjects;
 using TwitchDownloaderCore.TwitchObjects.Gql;
@@ -28,10 +29,12 @@ namespace TwitchDownloaderWPF
     /// </summary>
     public partial class PageChatUpdate : Page
     {
-
         public string InputFile;
         public ChatRoot ChatJsonInfo;
         public string VideoId;
+        public string StreamerId;
+        public string ClipperName;
+        public string ClipperId;
         public DateTime VideoCreatedAt;
         public TimeSpan VideoLength;
         public int ViewCount;
@@ -110,6 +113,9 @@ namespace TwitchDownloaderWPF
                 : Translations.Strings.UnknownVideoLength;
 
             VideoId = ChatJsonInfo.video.id ?? ChatJsonInfo.comments.FirstOrDefault()?.content_id ?? "-1";
+            StreamerId = ChatJsonInfo.streamer.id.ToString(CultureInfo.InvariantCulture);
+            ClipperName = ChatJsonInfo.clipper?.name;
+            ClipperId = ChatJsonInfo.clipper?.id.ToString(CultureInfo.InvariantCulture);
             ViewCount = ChatJsonInfo.video.viewCount;
             Game = ChatJsonInfo.video.game ?? ChatJsonInfo.video.chapters.FirstOrDefault()?.gameDisplayName ?? Translations.Strings.UnknownGame;
 
@@ -154,8 +160,8 @@ namespace TwitchDownloaderWPF
                         numEndHour.Maximum = 0;
                     }
 
-                    GqlClipResponse videoInfo = await TwitchHelper.GetClipInfo(VideoId);
-                    if (videoInfo.data.clip.video == null)
+                    GqlClipResponse clipInfo = await TwitchHelper.GetClipInfo(VideoId);
+                    if (clipInfo.data.clip.video == null)
                     {
                         AppendLog(Translations.Strings.ErrorLog + Translations.Strings.UnableToFindThumbnail + ": " + Translations.Strings.VodExpiredOrIdCorrupt);
                         _ = ThumbnailService.TryGetThumb(ThumbnailService.THUMBNAIL_MISSING_URL, out var image);
@@ -163,12 +169,14 @@ namespace TwitchDownloaderWPF
                     }
                     else
                     {
-                        VideoLength = TimeSpan.FromSeconds(videoInfo.data.clip.durationSeconds);
+                        VideoLength = TimeSpan.FromSeconds(clipInfo.data.clip.durationSeconds);
                         labelLength.Text = VideoLength.ToString("c");
-                        ViewCount = videoInfo.data.clip.viewCount;
-                        Game = videoInfo.data.clip.game?.displayName;
+                        ViewCount = clipInfo.data.clip.viewCount;
+                        Game = clipInfo.data.clip.game?.displayName;
+                        ClipperName ??= clipInfo.data.clip.curator?.displayName ?? Translations.Strings.UnknownUser;
+                        ClipperId ??= clipInfo.data.clip.curator?.id;
 
-                        var thumbUrl = videoInfo.data.clip.thumbnailURL;
+                        var thumbUrl = clipInfo.data.clip.thumbnailURL;
                         if (!ThumbnailService.TryGetThumb(thumbUrl, out var image))
                         {
                             AppendLog(Translations.Strings.ErrorLog + Translations.Strings.UnableToFindThumbnail);
@@ -216,7 +224,21 @@ namespace TwitchDownloaderWPF
             {
                 ChatFormat.Text => radioText.IsChecked = true,
                 ChatFormat.Html => radioHTML.IsChecked = true,
-                _ => radioJson.IsChecked = true
+                ChatFormat.Json => radioJson.IsChecked = true,
+                _ => null,
+            };
+            _ = (ChatCompression)Settings.Default.ChatJsonCompression switch
+            {
+                ChatCompression.None => radioCompressionNone.IsChecked = true,
+                ChatCompression.Gzip => radioCompressionGzip.IsChecked = true,
+                _ => null,
+            };
+            _ = (TimestampFormat)Settings.Default.ChatTextTimestampStyle switch
+            {
+                TimestampFormat.Utc => radioTimestampUTC.IsChecked = true,
+                TimestampFormat.Relative => radioTimestampRelative.IsChecked = true,
+                TimestampFormat.None => radioTimestampNone.IsChecked = true,
+                _ => null,
             };
         }
 
@@ -484,10 +506,10 @@ namespace TwitchDownloaderWPF
             var saveFileDialog = new SaveFileDialog
             {
                 FileName = FilenameService.GetFilename(Settings.Default.TemplateChat, textTitle.Text,
-                    ChatJsonInfo.video.id ?? ChatJsonInfo.comments.FirstOrDefault()?.content_id ?? "-1", VideoCreatedAt, textStreamer.Text,
+                    ChatJsonInfo.video.id ?? ChatJsonInfo.comments.FirstOrDefault()?.content_id ?? "-1", VideoCreatedAt, textStreamer.Text, StreamerId,
                     checkStart.IsChecked == true ? new TimeSpan((int)numStartHour.Value, (int)numStartMinute.Value, (int)numStartSecond.Value) : TimeSpan.FromSeconds(double.IsNegative(ChatJsonInfo.video.start) ? 0.0 : ChatJsonInfo.video.start),
                     checkEnd.IsChecked == true ? new TimeSpan((int)numEndHour.Value, (int)numEndMinute.Value, (int)numEndSecond.Value) : VideoLength,
-                    ViewCount, Game)
+                    ViewCount, Game, ClipperName, ClipperId)
             };
 
             if (radioJson.IsChecked == true)
@@ -574,7 +596,6 @@ namespace TwitchDownloaderWPF
                 _cancellationTokenSource.Dispose();
                 UpdateActionButtons(false);
 
-                currentUpdate = null;
                 GC.Collect();
             }
             catch (Exception ex)
@@ -590,6 +611,7 @@ namespace TwitchDownloaderWPF
         private void BtnCancel_Click(object sender, RoutedEventArgs e)
         {
             statusMessage.Text = Translations.Strings.StatusCanceling;
+            SetImage("Images/ppStretch.gif", true);
             try
             {
                 _cancellationTokenSource.Cancel();
@@ -666,6 +688,51 @@ namespace TwitchDownloaderWPF
                 WindowStartupLocation = WindowStartupLocation.CenterOwner
             };
             queueOptions.ShowDialog();
+        }
+
+        private void RadioCompressionNone_OnCheckedChanged(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized)
+                return;
+
+            Settings.Default.ChatJsonCompression = (int)ChatCompression.None;
+            Settings.Default.Save();
+        }
+
+        private void RadioCompressionGzip_OnCheckedChanged(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized)
+                return;
+
+            Settings.Default.ChatJsonCompression = (int)ChatCompression.Gzip;
+            Settings.Default.Save();
+        }
+
+        private void RadioTimestampUTC_OnCheckedChanged(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized)
+                return;
+
+            Settings.Default.ChatTextTimestampStyle = (int)TimestampFormat.Utc;
+            Settings.Default.Save();
+        }
+
+        private void RadioTimestampRelative_OnCheckedChanged(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized)
+                return;
+
+            Settings.Default.ChatTextTimestampStyle = (int)TimestampFormat.Relative;
+            Settings.Default.Save();
+        }
+
+        private void RadioTimestampNone_OnCheckedChanged(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized)
+                return;
+
+            Settings.Default.ChatTextTimestampStyle = (int)TimestampFormat.None;
+            Settings.Default.Save();
         }
     }
 }

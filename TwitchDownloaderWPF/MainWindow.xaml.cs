@@ -3,11 +3,13 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
+using TwitchDownloaderWPF.Extensions;
 using TwitchDownloaderWPF.Properties;
 using TwitchDownloaderWPF.Services;
 using Xabe.FFmpeg;
@@ -88,7 +90,8 @@ namespace TwitchDownloaderWPF
             // it will sometimes start behind other windows, usually (but not always) due to the user's actions.
             FlashTaskbarIconIfNotForeground(TimeSpan.FromSeconds(3));
 
-            var currentVersion = Version.Parse("1.54.4");
+            // Despite not specifying a revision in the AssemblyVersion, the compiler still adds one. We don't want that.
+            var currentVersion = Assembly.GetExecutingAssembly().GetName().Version!.StripRevisionIfDefault();
 #if DEBUG
             Title = $"Twitch Downloader v{currentVersion} - DEBUG";
 #else
@@ -96,12 +99,12 @@ namespace TwitchDownloaderWPF
 #endif
 
             // TODO: extract FFmpeg handling to a dedicated service
-            if (!File.Exists("ffmpeg.exe"))
+            if (!File.Exists("ffmpeg.exe") || File.GetLastWriteTime("ffmpeg.exe") < DateTime.Now - TimeSpan.FromDays(365))
             {
                 var oldTitle = Title;
                 try
                 {
-                    await FFmpegDownloader.GetLatestVersion(FFmpegVersion.Full, new FfmpegDownloadProgress());
+                    await FFmpegDownloader.GetLatestVersion(FFmpegVersion.Official, new FfmpegDownloadProgress());
 
                     // Flash the window to signify that FFmpeg has been downloaded
                     FlashTaskbarIconIfNotForeground(TimeSpan.FromSeconds(3));
@@ -150,7 +153,7 @@ namespace TwitchDownloaderWPF
                 FlashCount = uint.MaxValue,
                 Timeout = 0
             };
-            _ = NativeFunctions.FlashWindowEx(flashWInfo);
+            _ = NativeFunctions.FlashWindowEx(ref flashWInfo);
 
             await Task.Delay(flashDuration);
 
@@ -162,7 +165,7 @@ namespace TwitchDownloaderWPF
                 FlashCount = 0,
                 Timeout = 0
             };
-            _ = NativeFunctions.FlashWindowEx(stopFlashWInfo);
+            _ = NativeFunctions.FlashWindowEx(ref stopFlashWInfo);
         }
 
         private class FfmpegDownloadProgress : IProgress<ProgressInfo>

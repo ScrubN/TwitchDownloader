@@ -13,12 +13,14 @@
 
 This document is also available in:
 
-- [**Spanish / Español**](README_es.md)
 - [**Italian / Italiano**](README_it.md)
-- [**Portuguese (Brazil) / Português (Brasil)**](README_pt-br.md)
-- [**Turkish / Türkçe**](README_tr.md)
 - [**Japanese / 日本語**](README_ja.md)
-- [**Simplified Chinese / 简体中文**](README_zh-cn.md)
+- [**Portuguese (Brazil) / Português (Brasil)**](README_pt-br.md)
+- [**Russian / Русский**](README_ru.md)
+- [**Spanish / Español**](README_es.md)
+- [**Turkish / Türkçe**](README_tr.md)
+- [**Simplified Chinese / 简体中文（中国大陆）**](README_zh-cn.md)
+- [**Traditonal Chinese / 繁體中文（台灣）**](README_zh-tw.md)
 
 ## Chat Render Example
 
@@ -237,13 +239,13 @@ dotnet publish TwitchDownloaderCLI -p:PublishProfile=<Profile>
 5. a) Navigate to the GUI build folder:
 
 ```
-cd TwitchDownloaderWPF/bin/Release/net6.0-windows/publish/win-x64
+cd TwitchDownloaderWPF/bin/Release/net8.0-windows/publish/win-x64
 ```
 
 5. b) Navigate to the CLI build folder:
 
 ```
-cd TwitchDownloaderCLI/bin/Release/net6.0/publish
+cd TwitchDownloaderCLI/bin/Release/net8.0/publish
 ```
 
 # Third Party Credits

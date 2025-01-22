@@ -5,7 +5,6 @@
         public string id { get; set; }
         public PlaybackAccessToken playbackAccessToken { get; set; }
         public VideoQuality[] videoQualities { get; set; }
-        public string __typename { get; set; }
     }
 
     public class ClipTokenData
@@ -17,7 +16,6 @@
     {
         public string signature { get; set; }
         public string value { get; set; }
-        public string __typename { get; set; }
     }
 
     public class GqlClipTokenResponse
@@ -28,9 +26,8 @@
 
     public class VideoQuality
     {
-        public double frameRate { get; set; }
+        public decimal frameRate { get; set; }
         public string quality { get; set; }
         public string sourceURL { get; set; }
-        public string __typename { get; set; }
     }
 }
