@@ -197,7 +197,7 @@ You can find more example commands in the [CLI README](TwitchDownloaderCLI/READM
 
 ## Requirements
 
-- [.NET 8.0.x SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+- [.NET 9.0.x SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
 - About 1GB of disk space
 
 ## Build Instructions
@@ -239,13 +239,13 @@ dotnet publish TwitchDownloaderCLI -p:PublishProfile=<Profile>
 5. a) Navigate to the GUI build folder:
 
 ```
-cd TwitchDownloaderWPF/bin/Release/net8.0-windows/publish/win-x64
+cd TwitchDownloaderWPF/bin/Release/net9.0-windows/publish/win-x64
 ```
 
 5. b) Navigate to the CLI build folder:
 
 ```
-cd TwitchDownloaderCLI/bin/Release/net8.0/publish
+cd TwitchDownloaderCLI/bin/Release/net9.0/publish
 ```
 
 # Third Party Credits

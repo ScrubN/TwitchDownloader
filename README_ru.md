@@ -186,7 +186,7 @@ chmod +x ffmpeg
 
 ## Требования
 
-- [.NET 8.0.x SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+- [.NET 9.0.x SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
 - Примерно 1GB свободного места
 
 ## Инструкции сборки
@@ -228,13 +228,13 @@ dotnet publish TwitchDownloaderCLI -p:PublishProfile=<Профили>
 5. a) Зайдите в папку с GUI сборкой:
 
 ```
-cd TwitchDownloaderWPF/bin/Release/net8.0-windows/publish/win-x64
+cd TwitchDownloaderWPF/bin/Release/net9.0-windows/publish/win-x64
 ```
 
 5. b) Зайдите в папку с CLI сборкой:
 
 ```
-cd TwitchDownloaderCLI/bin/Release/net8.0/publish
+cd TwitchDownloaderCLI/bin/Release/net9.0/publish
 ```
 
 # Благодарности третьим лицам

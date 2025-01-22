@@ -188,7 +188,7 @@ chmod +x ffmpeg
 
 ## 要求
 
-- [.NET 8.0.x SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+- [.NET 9.0.x SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
 - 約 1GB 磁碟空間
 
 ## 構建說明
@@ -230,13 +230,13 @@ dotnet publish TwitchDownloaderCLI -p:PublishProfile=<Profile>
 5. a) 定位至 GUI 構建資料夾：
 
 ```命令
-cd TwitchDownloaderWPF/bin/Release/net8.0-windows/publish/win-x64
+cd TwitchDownloaderWPF/bin/Release/net9.0-windows/publish/win-x64
 ```
 
 5. b) 定位至 CLI 構建資料夾：
 
 ```命令
-cd TwitchDownloaderCLI/bin/Release/net8.0/publish
+cd TwitchDownloaderCLI/bin/Release/net9.0/publish
 ```
 
 # 第三方貢獻

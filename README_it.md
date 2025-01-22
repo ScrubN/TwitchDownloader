@@ -188,7 +188,7 @@ Puoi trovare altri esempi nel [CLI README](TwitchDownloaderCLI/README.md#example
 
 ## Requisiti
 
-- [.NET 8.0.x SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+- [.NET 9.0.x SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
 - Circa 1GB di spazio su disco
 
 ## Istruzioni
@@ -230,13 +230,13 @@ dotnet publish TwitchDownloaderCLI -p:PublishProfile=<Profile>
 5. a) Naviga nella cartella della GUI:
 
 ```
-cd TwitchDownloaderWPF/bin/Release/net8.0-windows/publish/win-x64
+cd TwitchDownloaderWPF/bin/Release/net9.0-windows/publish/win-x64
 ```
 
 5. b) Naviga nella cartella del CLI:
 
 ```
-cd TwitchDownloaderCLI/bin/Release/net8.0/publish
+cd TwitchDownloaderCLI/bin/Release/net9.0/publish
 ```
 
 # Crediti di Terze Parti
