@@ -107,7 +107,7 @@ namespace TwitchDownloaderCore.Services
             return returnString;
         }
 
-        private static readonly char[] FilenameInvalidChars = Path.GetInvalidFileNameChars();
+        private static readonly SearchValues<char> FilenameInvalidChars = SearchValues.Create(Path.GetInvalidFileNameChars());
 
         [return: NotNullIfNotNull(nameof(filename))]
         public static string ReplaceInvalidFilenameChars([AllowNull] string filename)

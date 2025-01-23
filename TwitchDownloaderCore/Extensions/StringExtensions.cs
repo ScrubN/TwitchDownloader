@@ -1,10 +1,11 @@
 using System;
+using System.Buffers;
 
 namespace TwitchDownloaderCore.Extensions
 {
     public static class StringExtensions
     {
-        public static string ReplaceAny(this string str, ReadOnlySpan<char> oldChars, char newChar)
+        public static string ReplaceAny(this string str, SearchValues<char> oldChars, char newChar)
         {
             if (string.IsNullOrEmpty(str))
             {
@@ -17,27 +18,21 @@ namespace TwitchDownloaderCore.Extensions
                 return str;
             }
 
-            const ushort MAX_STACK_SIZE = 512;
-            var span = str.Length <= MAX_STACK_SIZE
-                ? stackalloc char[str.Length]
-                : str.ToCharArray();
+            return string.Create(str.Length, (str, index, oldChars, newChar), static (span, state) =>
+            {
+                var (str, index, oldChars, newChar) = state;
 
-            // Unfortunately this cannot be inlined with the previous statement because a ternary is required for the stackalloc to compile
-            if (str.Length <= MAX_STACK_SIZE)
+                // A single CopyTo() followed by individual char replacements is significantly faster than many smaller CopyTo()s
                 str.CopyTo(span);
 
-            var tempSpan = span;
-            do
-            {
-                tempSpan[index] = newChar;
-                tempSpan = tempSpan[(index + 1)..];
+                do
+                {
+                    span[index] = newChar;
+                    span = span[(index + 1)..];
 
-                index = tempSpan.IndexOfAny(oldChars);
-                if (index == -1)
-                    break;
-            } while (true);
-
-            return span.ToString();
+                    index = span.IndexOfAny(oldChars);
+                } while (index != -1);
+            });
         }
     }
 }
