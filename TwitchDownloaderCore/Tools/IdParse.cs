@@ -4,12 +4,16 @@ using System.Text.RegularExpressions;
 
 namespace TwitchDownloaderCore.Tools
 {
-    public static class IdParse
+    public static partial class IdParse
     {
-        // TODO: Use source generators when .NET7
-        private static readonly Regex VideoId = new(@"(?<=^|twitch\.tv\/videos\/)\d+(?=\/?(?:$|\?))", RegexOptions.Compiled);
-        private static readonly Regex HighlightId = new(@"(?<=^|twitch\.tv\/\w+\/v(?:ideo)?\/)\d+(?=\/?(?:$|\?))", RegexOptions.Compiled);
-        private static readonly Regex ClipId = new(@"(?<=^|(?:clips\.)?twitch\.tv\/(?:\w+\/clip\/)?)[\w-]+?(?=\/?(?:$|\?))", RegexOptions.Compiled);
+        [GeneratedRegex(@"(?<=^|twitch\.tv\/videos\/)\d+(?=\/?(?:$|\?))", RegexOptions.Compiled)]
+        private static partial Regex VideoId();
+
+        [GeneratedRegex(@"(?<=^|twitch\.tv\/\w+\/v(?:ideo)?\/)\d+(?=\/?(?:$|\?))", RegexOptions.Compiled)]
+        private static partial Regex HighlightId();
+
+        [GeneratedRegex(@"(?<=^|(?:clips\.)?twitch\.tv\/(?:\w+\/clip\/)?)[\w-]+?(?=\/?(?:$|\?))", RegexOptions.Compiled)]
+        private static partial Regex ClipId();
 
         /// <returns>A <see cref="Match"/> of the video's id or <see langword="null"/>.</returns>
         [return: MaybeNull]
@@ -17,13 +21,13 @@ namespace TwitchDownloaderCore.Tools
         {
             text = text.Trim();
 
-            var videoIdMatch = VideoId.Match(text);
+            var videoIdMatch = VideoId().Match(text);
             if (videoIdMatch.Success)
             {
                 return videoIdMatch;
             }
 
-            var highlightIdMatch = HighlightId.Match(text);
+            var highlightIdMatch = HighlightId().Match(text);
             if (highlightIdMatch.Success)
             {
                 return highlightIdMatch;
@@ -38,7 +42,7 @@ namespace TwitchDownloaderCore.Tools
         {
             text = text.Trim();
 
-            var clipIdMatch = ClipId.Match(text);
+            var clipIdMatch = ClipId().Match(text);
             if (clipIdMatch.Success && !clipIdMatch.Value.All(char.IsDigit))
             {
                 return clipIdMatch;
