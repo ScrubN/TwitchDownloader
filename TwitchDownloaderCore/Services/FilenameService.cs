@@ -107,7 +107,8 @@ namespace TwitchDownloaderCore.Services
             return returnString;
         }
 
-        private static readonly SearchValues<char> FilenameInvalidChars = SearchValues.Create(Path.GetInvalidFileNameChars());
+        private static readonly SearchValues<char> VisibleFilenameInvalidChars = SearchValues.Create("\"*:<>?|/\\");
+        private static readonly SearchValues<char> AllFilenameInvalidChars = SearchValues.Create(Path.GetInvalidFileNameChars());
 
         [return: NotNullIfNotNull(nameof(filename))]
         public static string ReplaceInvalidFilenameChars([AllowNull] string filename)
@@ -119,25 +120,10 @@ namespace TwitchDownloaderCore.Services
 
             var newName = TimestampRegex().Replace(filename, "_");
 
-            if (newName.AsSpan().IndexOfAny("\"*:<>?|/\\") != -1)
-            {
-                newName = string.Create(filename.Length, filename, static (span, str) =>
-                {
-                    const int FULL_WIDTH_OFFSET = 0xFEE0; // https://en.wikipedia.org/wiki/Halfwidth_and_Fullwidth_Forms_(Unicode_block)
-                    for (var i = 0; i < str.Length; i++)
-                    {
-                        var ch = str[i];
-                        span[i] = ch switch
-                        {
-                            '\"' or '*' or ':' or '<' or '>' or '?' or '|' or '/' or '\\' => (char)(ch + FULL_WIDTH_OFFSET),
-                            _ => ch
-                        };
-                    }
-                });
-            }
-
-            // In case there are additional invalid chars such as control codes
-            return newName.ReplaceAny(FilenameInvalidChars, '_');
+            const int FULL_WIDTH_OFFSET = 0xFEE0; // https://en.wikipedia.org/wiki/Halfwidth_and_Fullwidth_Forms_(Unicode_block)
+            return newName
+                .ReplaceAny(VisibleFilenameInvalidChars, ch => (char)(ch + FULL_WIDTH_OFFSET))
+                .ReplaceAny(AllFilenameInvalidChars, '_'); // In case there are additional invalid chars such as control codes
         }
 
         [return: MaybeNull]
